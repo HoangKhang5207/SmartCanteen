@@ -125,7 +125,7 @@
 - **Request Body (tùy chọn):**
   ```json
   {
-    "name": "Khách hàng Demo"
+    "demo_key": "customer1"
   }
   ```
 - **Response `200 OK`:** Cấu trúc giống `POST /api/v1/auth/zalo`.
@@ -140,9 +140,9 @@
   {
     "data": {
       "id": 1,
-      "name": "Khách hàng Demo",
+      "name": "Khách hàng Demo (customer1)",
       "role": "customer",
-      "zalo_user_id": "demo-customer-local"
+      "zalo_user_id": "demo_customer1"
     }
   }
   ```
@@ -171,7 +171,7 @@
   }
   ```
 - **Quy tắc nghiệp vụ & bảo toàn dữ liệu:**
-  1. `items`: mảng từ `1..50` phần tử; mỗi phần tử có `product_id` nguyên dương và `quantity` trong khoảng `1..20`. Các dòng trùng `product_id` được chuẩn hóa/cộng dồn số lượng và kiểm tra tổng số lượng mỗi món `<= 20`.
+  1. `items`: mảng từ `1..50` phần tử; mỗi phần tử có `product_id` nguyên dương không trùng lặp (`distinct`) và `quantity` trong khoảng `1..20`.
   2. `note`: tùy chọn, tối đa `500` ký tự.
   3. **Tính tiền phía Server (AC-04, AC-11):** Server khóa bản ghi (`lockForUpdate`) các sản phẩm liên quan trong bảng `products`, tự tính `unit_price = product.price`, `subtotal = unit_price * quantity`, `total_amount = sum(subtotal)` và lưu cố định vào `order_items` / `orders`. Mọi trường giá hoặc tổng tiền do client gửi lên đều bị bỏ qua.
   4. **Kiểm tra khả dụng (AC-05):** Nếu bất kỳ `product_id` nào không tồn tại, có `is_available = false`, hoặc thuộc danh mục có `is_active = false`, giao dịch bị từ chối với `422 Unprocessable Entity`.
