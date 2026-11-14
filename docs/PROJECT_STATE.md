@@ -3,7 +3,7 @@
 ## Tóm tắt chung
 
 - **Dự án:** Smart Canteen (Zalo Mini App × React × Laravel 13 × PostgreSQL)
-- **Nhánh hiện tại:** `feature/s2-checkout` (tách từ `main` commit `6f44c9c` sau khi đã merge S1 vào `main`)
+- **Nhánh hiện tại:** `feature/s3-admin` (tách từ `main` commit `d45ca09` sau khi đã merge S1 và S2 vào `main`)
 - **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-14-smart-canteen-design.md` (APPROVED 2026-11-14)
 
 ---
@@ -18,23 +18,28 @@
 ## Lát cắt S2 — Nhận diện thương hiệu, Xác thực, Giỏ hàng & Đặt đơn (Checkout Vertical Slice)
 
 - **Mã tác vụ:** `S2-CHECKOUT-SLICE`
+- **Trạng thái:** `COMPLETED_VERIFIED` & **Đã merge vào `main` (`d45ca09`)**.
+
+---
+
+## Lát cắt S3 — Trang quản trị Admin/Staff, RBAC, Điều phối đơn hàng, Thống kê & CRUD Thực đơn
+
+- **Mã tác vụ:** `S3-ADMIN-SLICE`
 - **Trạng thái:** `COMPLETED_VERIFIED`
-- **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-14-s2-checkout-slice.md`
+- **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-14-s3-admin-slice.md`
 - **Các bước đã hoàn thành:**
-  - [x] Task 1: Tích hợp Logo chính thức (`canteen_logo.jpg` → `miniapp/src/static/canteen-logo.jpg`), `BrandLogo` component, hệ màu thương hiệu xanh lá chuẩn WCAG AA (`brand-500: #5DBE46`, `brand-700: #2E7D32`), cập nhật `DESIGN.md`, `tailwind.config.js`, `app.scss` và xử lý 3 góp ý Minor từ S1.
-  - [x] Task 2: Database schema & models cho `users` (`role`, `zalo_user_id`), `orders` (`code`, `status`, `total_amount`, `idempotency_key`, `payload_hash`, `version`), `order_items` (`quantity`, `unit_price`, `subtotal`), cùng `UserRole` và `OrderStatus` enums.
-  - [x] Task 3: Xác thực khách hàng qua Zalo Open API (`ZaloIdentityService` với `appsecret_proof` HMAC-SHA256) và Demo Login local (`POST /api/v1/auth/demo`, tự động chặn `403` trên production), phát hành Sanctum Bearer token.
-  - [x] Task 4: Đặt đơn hàng trong DB transaction (`OrderService` + `lockForUpdate`), kiểm chứng `Idempotency-Key` (`201 Created` / `200 OK` khi retry cùng payload / `409 Conflict` khi khác payload), tính tiền phía server (**AC-04**, **AC-11**), kiểm tra món khả dụng (**AC-05**) và phân quyền xem đơn cá nhân (**AC-10**).
-  - [x] Task 5: Lớp dữ liệu Mini App (`apiPost`, Bearer token trong bộ nhớ, logic giỏ hàng Jotai `cart-logic.ts` kèm unit test, API client cho `auth` và `orders`).
-  - [x] Task 6: Giao diện Mini App (`BottomNav`, `CartPage`, `OrdersPage`, `OrderDetailPage`, nút thêm vào giỏ trên `MenuPage` & `ProductDetailPage`, tự động làm mới trạng thái đơn).
-  - [x] Task 7: Cập nhật tài liệu (`docs/api-contract.md`, `README.md`, `docs/PROJECT_STATE.md`) và chạy toàn bộ cổng chất lượng.
+  - [x] Task 1: Bảng `order_status_logs` & model `OrderStatusLog`, middleware phân quyền `EnsureUserHasRole` (`role:staff,admin`), và `StaffSeeder` tạo tài khoản `admin@smartcanteen.local` / `staff@smartcanteen.local` idempotent.
+  - [x] Task 2: `OrderService::transitionStatus()` xử lý chuyển trạng thái theo State Machine + Optimistic Locking (`version`, trả `409 Conflict` khi xung đột) + ghi `order_status_logs` trong `DB::transaction`, cùng REST API `GET /api/v1/admin/orders` và `PATCH /api/v1/admin/orders/{id}/status`.
+  - [x] Task 3: `StatisticsService::getTodaySummary()` và API `GET /api/v1/admin/statistics` tính tổng số đơn hôm nay, số đơn đang xử lý, doanh thu các đơn `COMPLETED` hôm nay và phân bổ theo từng trạng thái.
+  - [x] Task 4: Cổng quản trị Laravel Blade (`/admin/login`, `/admin`, `/admin/orders`, `/admin/orders/{order}`, `/admin/categories`, `/admin/products`) mang nhận diện thương hiệu Smart Canteen, tích hợp tự động làm mới 10 giây, chuyển trạng thái kèm `version`, và CRUD Danh mục / Món ăn bảo toàn lịch sử đơn hàng (**AC-11**).
+  - [x] Task 5: Cập nhật tài liệu (`docs/api-contract.md`, `README.md`, `docs/PROJECT_STATE.md`) và chạy toàn bộ cổng chất lượng.
 
 - **Kết quả cổng chất lượng (Quality Gates):**
-  - `php artisan test` (PostgreSQL `titkul_canteen_test`): **PASS** — 8 test suites, 31 tests, 157 assertions.
+  - `php artisan test` (PostgreSQL `titkul_canteen_test`): **PASS** — 12 test suites, 45 tests, 273 assertions.
   - `vendor\bin\pint --test`: **PASS** — `{"tool":"pint","result":"passed"}`.
   - `npm test` (Vitest): **PASS** — 3 test files, 11 tests.
   - `npx tsc --noEmit`: **PASS** — 0 lỗi kiểu dữ liệu.
   - `npm run build` (Vite production build): **PASS** — tạo bundle tại `miniapp/www/`.
 
-- **Công việc tiếp theo (S3):**
-  - Trang quản trị Admin/Staff trên Laravel (Session Auth, RBAC middleware `role:staff,admin`, Dashboard thống kê hôm nay, Bảng điều phối đơn hàng kèm chuyển trạng thái với Optimistic Locking `version`, và CRUD Món ăn / Danh mục).
+- **Công việc tiếp theo (S4):**
+  - Hoàn thiện bộ tài liệu kỹ thuật bàn giao (`docs/requirements.md`, `docs/database.md`, `docs/test-cases.md`, `docs/demo-script.md`), rà soát toàn diện các tiêu chí nghiệm thu P0/P1 (AC-01..AC-13) và kịch bản trình diễn 8 bước end-to-end.
