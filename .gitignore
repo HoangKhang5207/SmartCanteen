@@ -5,6 +5,7 @@ vendor/
 !.env.example
 *.log
 miniapp/dist/
+miniapp/www/
 api/storage/*.key
 .local/
 .superpowers/
