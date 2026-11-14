@@ -13,7 +13,7 @@
 
 | Hạng mục Kiểm thử | Công cụ | Số bộ test (Suites) | Số bài test (Tests) | Số khẳng định (Assertions) | Kết quả |
 |---|---|---|---|---|---|
-| **Backend Integration & Feature Tests** | PHPUnit + PostgreSQL | `13` | `49` | `344` | **100% PASS (`49/49`)** |
+| **Backend Integration & Feature Tests** | PHPUnit + PostgreSQL | `14` | `49` | `344` | **100% PASS (`49/49`)** |
 | **Backend Code Style & Formatting** | Laravel Pint | Toàn bộ `api/` | — | — | **PASS (`{"tool":"pint","result":"passed"}`)** |
 | **Frontend Unit Tests** | Vitest | `3` | `11` | `26` | **100% PASS (`11/11`)** |
 | **Frontend Static Type Checking** | TypeScript (`tsc --noEmit`) | Toàn bộ `miniapp/src` | — | — | **PASS (`0 errors`)** |
