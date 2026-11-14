@@ -226,3 +226,67 @@
 - **Xác thực:** `Bearer <token>` (`auth:sanctum`)
 - **Response `200 OK`:** `{ "data": OrderResource }`
 - **Response `404 Not Found`:** Khi đơn hàng không tồn tại hoặc thuộc về người dùng khác (**AC-10** — không tiết lộ sự tồn tại của đơn hàng người khác).
+
+---
+
+## 4. Quản trị & Điều phối đơn hàng (S3 — Staff/Admin Endpoints)
+
+> **Phân quyền (RBAC):** Toàn bộ nhóm `/api/v1/admin/*` yêu cầu xác thực `auth:sanctum` **và** middleware `role:staff,admin`. Tài khoản có `role = customer` gọi vào sẽ nhận `403 Forbidden`.
+
+### 4.1. Danh sách đơn hàng cho Nhân viên / Quản trị viên
+
+- **Endpoint:** `GET /api/v1/admin/orders`
+- **Xác thực & Phân quyền:** `Bearer <token>` (`role:staff,admin`)
+- **Query Parameters:**
+  | Tham số | Kiểu | Bắt buộc | Quy tắc |
+  |---|---|---|---|
+  | `status` | `string` | Không | Lọc theo trạng thái (`PENDING`, `PREPARING`, `READY`, `COMPLETED`, `CANCELLED`) |
+  | `search` | `string` | Không | Tìm kiếm không phân biệt hoa thường theo mã đơn (`code`, tối đa 64 ký tự) |
+- **Response `200 OK`:** Danh sách `OrderResource` (bao gồm `customer_name`, `items` và `status_logs`).
+
+### 4.2. Chuyển trạng thái đơn hàng (State Machine + Optimistic Locking)
+
+- **Endpoint:** `PATCH /api/v1/admin/orders/{id}/status`
+- **Xác thực & Phân quyền:** `Bearer <token>` (`role:staff,admin`)
+- **Request Body:**
+  ```json
+  {
+    "status": "PREPARING",
+    "version": 1
+  }
+  ```
+- **Quy tắc chuyển trạng thái (State Machine):**
+  - `PENDING` → `PREPARING` hoặc `CANCELLED`
+  - `PREPARING` → `READY` hoặc `CANCELLED`
+  - `READY` → `COMPLETED`
+  - `COMPLETED`, `CANCELLED` → Trạng thái kết thúc (không chuyển tiếp)
+- **Kiểm soát đồng thời & Nhật ký (Optimistic Locking + Audit Log):**
+  - Thực thi trong `DB::transaction` với khóa dòng `lockForUpdate()`.
+  - Nếu `version` gửi lên khác `orders.version` hiện tại → trả `409 Conflict` (không ghi đè và không ghi log).
+  - Nếu trạng thái đích không hợp lệ theo State Machine → trả `422 Unprocessable Entity`.
+  - Khi hợp lệ: cập nhật `status`, tăng `version` thêm `1`, và ghi bản ghi vào bảng `order_status_logs` (`order_id`, `from_status`, `to_status`, `changed_by`).
+- **Response `200 OK`:** `{ "data": OrderResource }` (kèm `version` mới và mảng `status_logs`).
+
+### 4.3. Thống kê vận hành trong ngày hôm nay
+
+- **Endpoint:** `GET /api/v1/admin/statistics`
+- **Xác thực & Phân quyền:** `Bearer <token>` (`role:staff,admin`)
+- **Response `200 OK`:**
+  ```json
+  {
+    "data": {
+      "date": "2026-11-14",
+      "today_total_orders": 5,
+      "today_completed_revenue": 150000,
+      "today_active_orders": 2,
+      "counts_by_status": {
+        "PENDING": 1,
+        "PREPARING": 1,
+        "READY": 0,
+        "COMPLETED": 2,
+        "CANCELLED": 1
+      }
+    }
+  }
+  ```
+- **Quy tắc:** `today_completed_revenue` chỉ cộng `total_amount` (số nguyên `VND`) của các đơn tạo trong ngày hôm nay có `status = COMPLETED`.
