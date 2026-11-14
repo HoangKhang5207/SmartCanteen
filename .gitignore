@@ -1,0 +1,11 @@
+node_modules/
+vendor/
+.env
+.env.*
+!.env.example
+*.log
+miniapp/dist/
+api/storage/*.key
+.local/
+.superpowers/
+.DS_Store
