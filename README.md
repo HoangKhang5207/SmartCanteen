@@ -2,21 +2,38 @@
 
 Ứng dụng đặt suất ăn & quản lý đơn hàng căn tin qua Zalo Mini App, kết nối tới Laravel 13 REST API + Cổng Quản trị Blade và cơ sở dữ liệu PostgreSQL độc lập (100% dữ liệu giả lập, không kết nối hệ thống Căn Tin Số production).
 
-## Cấu trúc Monorepo
+## Cấu trúc Monorepo & Hồ sơ Tài liệu Kỹ thuật
 
 ```text
 .
-├── api/                  # Laravel 13 REST API + Admin Blade Portal (PHP 8.5 + Sanctum + PostgreSQL)
-├── miniapp/              # Zalo Mini App (React 18 + TypeScript + ZaUI + Jotai + TanStack Query)
+├── api/                                # Laravel 13 REST API + Admin Blade Portal (PHP 8.5 + Sanctum + PostgreSQL)
+├── miniapp/                            # Zalo Mini App (React 18 + TypeScript + ZaUI + Jotai + TanStack Query)
 ├── docs/
-│   ├── api-contract.md   # Hợp đồng REST API (/api/v1)
-│   ├── PROJECT_STATE.md  # Trạng thái triển khai theo từng lát cắt (Vertical Slices)
-│   └── superpowers/      # Đặc tả thiết kế & kế hoạch triển khai đã phê duyệt
-├── canteen_logo.jpg      # Logo gốc thương hiệu Smart Canteen
-└── DESIGN.md             # Hệ thống thiết kế giao diện & bảng màu thương hiệu
+│   ├── requirements.md                 # Đặc tả yêu cầu nghiệp vụ & kỹ thuật (P0 / P1 / P2)
+│   ├── requirements/
+│   │   └── acceptance-criteria-matrix.md # Ma trận truy vết tiêu chí nghiệm thu (AC-01 .. AC-16)
+│   ├── architecture/
+│   │   └── system-architecture.md      # Kiến trúc hệ thống, luồng Auth, Idempotency & State Machine
+│   ├── design/
+│   │   └── ui-ux-brand-guidelines.md   # Hệ màu thương hiệu chuẩn WCAG 2.1 AA & quy chuẩn UI/UX
+│   ├── api-contract.md                 # Hợp đồng REST API (/api/v1)
+│   ├── database.md                     # Sơ đồ ERD, mô tả 7 bảng dữ liệu & Seeders
+│   ├── plans/
+│   │   └── roadmap-and-slices.md       # Lộ trình 7 ngày & các lát cắt dọc S1–S5
+│   ├── test-cases.md                   # Danh mục 21 kịch bản kiểm thử trọng yếu (TC-01 .. TC-21)
+│   ├── testing/
+│   │   └── test-report.md              # Báo cáo kết quả kiểm thử tự động (49 PHPUnit + 11 Vitest)
+│   ├── demo-script.md                  # Kịch bản trình diễn trực tiếp 8 bước cho Giám đốc
+│   ├── releases/
+│   │   ├── release-v0.1.0-mvp.md       # Ghi chú phát hành phiên bản v0.1.0-mvp
+│   │   └── s5-staging-zalo-deploy-runbook.md # Sổ tay triển khai HTTPS & Zalo Testing QR (S5)
+│   ├── PROJECT_STATE.md                # Trạng thái triển khai theo từng lát cắt (Vertical Slices)
+│   └── superpowers/                    # Đặc tả thiết kế & kế hoạch triển khai chi tiết S1–S4
+├── canteen_logo.jpg                    # Logo gốc thương hiệu Smart Canteen
+└── DESIGN.md                           # Hệ thống thiết kế giao diện & Design Tokens
 ```
 
-## Các tính năng đã hoàn thiện (S1 + S2 + S3)
+## Các tính năng đã hoàn thiện (S1 + S2 + S3 + S4)
 
 - **Nhận diện thương hiệu Smart Canteen:** Tích hợp logo chính thức và hệ màu xanh lá (`brand-500: #5DBE46` kết hợp `brand-700: #2E7D32` đạt độ tương phản chữ trắng `5.14:1` chuẩn WCAG 2.1 AA) đồng bộ trên cả Zalo Mini App và Cổng Quản trị Laravel Blade.
 - **Thực đơn & Tìm kiếm (S1):** Danh mục món ăn, tìm kiếm tiếng Việt debounce 300ms, lọc theo danh mục, hiển thị trạng thái còn món / hết món, chi tiết món ăn.
@@ -30,8 +47,8 @@
 - **Đơn của tôi & Chi tiết đơn (S2):**
   - Khách hàng chỉ xem được đơn của chính mình (`OrderPolicy`, trả `404` nếu truy cập đơn người khác).
   - Tự động làm mới (polling 7 giây) cho các đơn đang xử lý (`PENDING`, `PREPARING`, `READY`).
-- **Hệ thống Quản trị Admin/Staff (S3):**
-  - Xác thực Session Auth (`/admin/login`) và phân quyền RBAC middleware `role:staff,admin` (chặn `customer` với `403 Forbidden` trên cả Web lẫn REST API `/api/v1/admin/*`).
+- **Hệ thống Quản trị Admin/Staff & Phân quyền RBAC 3 cấp (S3 + S4):**
+  - Xác thực Session Auth (`/admin/login`) và phân quyền RBAC middleware (`role:staff,admin` cho điều phối đơn/thống kê/xem thực đơn; `role:admin` cho thêm/sửa/xóa Danh mục & Món ăn; chặn `customer` với `403 Forbidden`).
   - Dashboard thống kê hôm nay (`/admin` và `GET /api/v1/admin/statistics`): tổng đơn hôm nay, đơn đang xử lý, doanh thu các đơn `COMPLETED` hôm nay, phân bổ theo trạng thái (tự động làm mới mỗi 10 giây).
   - Bảng điều phối đơn hàng (`/admin/orders`, `/admin/orders/{order}` và `PATCH /api/v1/admin/orders/{id}/status`): kiểm tra chặt chẽ State Machine, kiểm soát đồng thời bằng Optimistic Locking (`version`, trả `409 Conflict` khi xung đột), và ghi lịch sử `order_status_logs`.
   - Quản lý Thực đơn (`/admin/categories`, `/admin/products`): CRUD Danh mục & Món ăn, bảo toàn nguyên vẹn giá lịch sử của các đơn hàng cũ (**AC-11**) và chặn xóa danh mục/món ăn đã có ràng buộc dữ liệu.
