@@ -6,14 +6,30 @@
 
 ```text
 .
-├── api/                  # Laravel 13 REST API (PHP 8.5 + PostgreSQL)
-├── miniapp/              # Zalo Mini App (React 18 + TypeScript + ZaUI + TanStack Query)
+├── api/                  # Laravel 13 REST API (PHP 8.5 + Sanctum + PostgreSQL)
+├── miniapp/              # Zalo Mini App (React 18 + TypeScript + ZaUI + Jotai + TanStack Query)
 ├── docs/
-│   ├── api-contract.md   # Hợp đồng REST API
+│   ├── api-contract.md   # Hợp đồng REST API (/api/v1)
 │   ├── PROJECT_STATE.md  # Trạng thái triển khai theo từng lát cắt (Vertical Slices)
 │   └── superpowers/      # Đặc tả thiết kế & kế hoạch triển khai đã phê duyệt
-└── DESIGN.md             # Hệ thống thiết kế giao diện (Documented Assumptions)
+├── canteen_logo.jpg      # Logo gốc thương hiệu Smart Canteen
+└── DESIGN.md             # Hệ thống thiết kế giao diện & bảng màu thương hiệu
 ```
+
+## Các tính năng đã hoàn thiện (S1 + S2)
+
+- **Nhận diện thương hiệu Smart Canteen:** Tích hợp logo chính thức và hệ màu xanh lá (`brand-500: #5DBE46` kết hợp `brand-700: #2E7D32` đạt độ tương phản chữ trắng `5.14:1` chuẩn WCAG 2.1 AA).
+- **Thực đơn & Tìm kiếm (S1):** Danh mục món ăn, tìm kiếm tiếng Việt debounce 300ms, lọc theo danh mục, hiển thị trạng thái còn món / hết món, chi tiết món ăn.
+- **Xác thực khách hàng (S2):**
+  - Xác minh `access_token` thật với Zalo Open API (`https://graph.zalo.me/v2.0/me` kèm `appsecret_proof` HMAC-SHA256) và cấp Laravel Sanctum Bearer token.
+  - Hỗ trợ `POST /api/v1/auth/demo` khi chạy ở môi trường `local`/`testing` (`DEMO_LOGIN_ENABLED=true`) và tự động khóa (`403 Forbidden`) trên `production`.
+- **Giỏ hàng & Đặt đơn an toàn (S2):**
+  - Quản lý giỏ hàng trong bộ nhớ bằng Jotai (`1..20` phần tử mỗi món).
+  - Tạo đơn hàng trong DB transaction (`DB::transaction` + `lockForUpdate`) kèm header `Idempotency-Key` chống tạo đơn trùng khi mạng chập chờn hoặc bấm đúp.
+  - Tính tiền hoàn toàn phía server từ bảng `products` (`unit_price`, `subtotal`, `total_amount` lưu cố định theo đơn vị nguyên `VND`), bỏ qua mọi giá do client gửi lên.
+- **Đơn của tôi & Chi tiết đơn (S2):**
+  - Khách hàng chỉ xem được đơn của chính mình (`OrderPolicy`, trả `404` nếu truy cập đơn người khác).
+  - Tự động làm mới (polling 7 giây) cho các đơn đang xử lý (`PENDING`, `PREPARING`, `READY`).
 
 ## Yêu cầu môi trường
 
@@ -56,7 +72,7 @@ npm install
 npm run dev
 ```
 
-Mở trình duyệt tại `http://localhost:3000/` (hoặc dùng `npm start` / Zalo Mini App Studio khi đã đăng nhập tài khoản Zalo Developer).
+Mở trình duyệt tại `http://localhost:3000/` (ứng dụng tự động đăng nhập qua `/api/v1/auth/demo` khi chạy trên trình duyệt local outside Zalo).
 
 ## Kiểm thử & Cổng chất lượng (Quality Gates)
 
