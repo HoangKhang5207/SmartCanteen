@@ -35,11 +35,11 @@
 - Modify: `miniapp/src/pages/menu.tsx`, `miniapp/src/pages/product-detail.tsx`, `miniapp/src/components/state-views.tsx`
 - Delete: `miniapp/src/pages/index.tsx`, `miniapp/src/components/clock.tsx`, `miniapp/src/components/logo.tsx`
 
-- [ ] Copy `canteen_logo.jpg` vào `miniapp/src/static/canteen-logo.jpg`.
-- [ ] Cập nhật `DESIGN.md` và `miniapp/tailwind.config.js` với bảng màu `brand` trích xuất từ logo (`brand-50: #EEF8EB`, `brand-100: #D8F0D2`, `brand-500: #5DBE46` leaf green, `brand-600: #3FA32B`, `brand-700: #2E7D32` primary CTA chuẩn WCAG AA 5.14:1, `brand-800: #236B27`, `brand-900: #14532D`) và chuyển `purge` sang `content` trong `tailwind.config.js`.
-- [ ] Thiết lập biến màu ZaUI (`--zmp-primary-color: #2E7D32`) trong `miniapp/src/css/app.scss` và cập nhật `theme-color` / tiêu đề trong `index.html`, `app-config.json`, `zmp-cli.json`.
-- [ ] Tạo `BrandLogo` component hiển thị logo Smart Canteen và tích hợp vào `MenuPage`, `ProductDetailPage`; đồng thời khắc phục 3 điểm Minor từ S1 (`maxLength={100}` trên ô tìm kiếm, hiển thị trạng thái đang tải khi bấm `"Thử lại"` với `isRefetching`, xóa 3 file mẫu không dùng).
-- [ ] Chạy `npm test`, `npx tsc --noEmit`, `npm run build` → PASS. Commit `feat(miniapp): apply smart canteen logo and green brand palette`.
+- [x] Copy `canteen_logo.jpg` vào `miniapp/src/static/canteen-logo.jpg`.
+- [x] Cập nhật `DESIGN.md` và `miniapp/tailwind.config.js` với bảng màu `brand` trích xuất từ logo (`brand-50: #EEF8EB`, `brand-100: #D8F0D2`, `brand-500: #5DBE46` leaf green, `brand-600: #3FA32B`, `brand-700: #2E7D32` primary CTA chuẩn WCAG AA 5.14:1, `brand-800: #236B27`, `brand-900: #14532D`) và chuyển `purge` sang `content` trong `tailwind.config.js`.
+- [x] Thiết lập biến màu ZaUI (`--zmp-primary-color: #2E7D32`) trong `miniapp/src/css/app.scss` và cập nhật `theme-color` / tiêu đề trong `index.html`, `app-config.json`, `zmp-cli.json`.
+- [x] Tạo `BrandLogo` component hiển thị logo Smart Canteen và tích hợp vào `MenuPage`, `ProductDetailPage`; đồng thời khắc phục 3 điểm Minor từ S1 (`maxLength={100}` trên ô tìm kiếm, hiển thị trạng thái đang tải khi bấm `"Thử lại"` với `isRefetching`, xóa 3 file mẫu không dùng).
+- [x] Chạy `npm test`, `npx tsc --noEmit`, `npm run build` → PASS. Commit `feat(miniapp): apply smart canteen logo and green brand palette`.
 
 ### Task 2: Database Schema & Models cho Users, Orders, OrderItems
 
@@ -58,8 +58,8 @@
 - `orders`: `id`, `user_id` FK→users restrictOnDelete, `code` string(32) unique, `status` string(20) default `'PENDING'`, `total_amount` unsignedInteger, `note` string(500) nullable, `idempotency_key` string(100), `payload_hash` string(64), `version` unsignedInteger default 1, timestamps; unique `['user_id', 'idempotency_key']`.
 - `order_items`: `id`, `order_id` FK→orders cascadeOnDelete, `product_id` FK→products restrictOnDelete, `quantity` unsignedSmallInteger, `unit_price` unsignedInteger, `subtotal` unsignedInteger, timestamps.
 
-- [ ] Viết `OrderSchemaTest` kiểm tra: tạo user Zalo không cần email/password, tạo order + order_items với integer VND, unique `(user_id, idempotency_key)`, và `OrderStatus::allowedTransitions()`.
-- [ ] Chạy test → FAIL. Hiện thực hóa Enums, Migrations, Models, Factories. Chạy test → PASS. Commit `feat(api): add auth and orders schema and models`.
+- [x] Viết `OrderSchemaTest` kiểm tra: tạo user Zalo không cần email/password, tạo order + order_items với integer VND, unique `(user_id, idempotency_key)`, và `OrderStatus::allowedTransitions()`.
+- [x] Chạy test → FAIL. Hiện thực hóa Enums, Migrations, Models, Factories. Chạy test → PASS. Commit `feat(api): add auth and orders schema and models`.
 
 ### Task 3: Xác thực Khách hàng (Zalo Open API + Demo Login Local)
 
@@ -74,13 +74,13 @@
 - `POST /api/v1/auth/demo` → chỉ hoạt động khi `APP_ENV` thuộc `['local', 'testing']` và `DEMO_LOGIN_ENABLED=true`; trả `200 { data: { token, user } }` hoặc `403`.
 - `GET /api/v1/auth/me` (`auth:sanctum`) → trả `200 { data: UserResource }` hoặc `401`.
 
-- [ ] Viết `AuthApiTest` (dùng `Http::fake()` cho `graph.zalo.me`):
+- [x] Viết `AuthApiTest` (dùng `Http::fake()` cho `graph.zalo.me`):
   - `test_zalo_login_verifies_token_with_appsecret_proof_and_returns_sanctum_token`
   - `test_zalo_login_returns_401_when_zalo_api_rejects_token`
   - `test_demo_login_succeeds_when_enabled_in_local_or_testing`
   - `test_demo_login_returns_403_when_disabled_or_in_production`
   - `test_me_endpoint_returns_authenticated_user_and_401_for_guest`
-- [ ] Chạy test → FAIL. Hiện thực hóa `ZaloIdentityService`, `AuthController`, `UserResource`, routes. Chạy test → PASS. Commit `feat(api): zalo identity verification and local demo auth`.
+- [x] Chạy test → FAIL. Hiện thực hóa `ZaloIdentityService`, `AuthController`, `UserResource`, routes. Chạy test → PASS. Commit `feat(api): zalo identity verification and local demo auth`.
 
 ### Task 4: Order Creation, Idempotency, Server Pricing & Customer Order History API
 
@@ -98,7 +98,7 @@
 - `GET /api/v1/orders` → `200 { data: [OrderResource] }` (chỉ đơn của user hiện tại, mới nhất trước).
 - `GET /api/v1/orders/{id}` → `200 { data: OrderResource }` hoặc `404` nếu đơn của người khác / không tồn tại.
 
-- [ ] Viết `OrderApiTest` kiểm chứng đầy đủ AC-04, AC-05, AC-06, AC-10, AC-11:
+- [x] Viết `OrderApiTest` kiểm chứng đầy đủ AC-04, AC-05, AC-06, AC-10, AC-11:
   - `test_creates_order_and_computes_total_on_server_ignoring_client_total` (AC-04)
   - `test_rejects_unavailable_or_inactive_category_product_or_invalid_quantity` (AC-05)
   - `test_idempotency_key_returns_same_order_on_retry_and_409_on_different_payload` (AC-06)
@@ -106,7 +106,7 @@
   - `test_changing_product_price_later_does_not_change_existing_order` (AC-11)
   - `test_customer_lists_only_own_orders_and_gets_404_for_other_users_order` (AC-10)
   - `test_unauthenticated_order_requests_return_401`
-- [ ] Chạy test → FAIL. Hiện thực hóa `OrderService`, `StoreOrderRequest`, `OrderResource`, `OrderPolicy`, `OrderController`. Chạy test → PASS. Commit `feat(api): transactional order creation with idempotency and server pricing`.
+- [x] Chạy test → FAIL. Hiện thực hóa `OrderService`, `StoreOrderRequest`, `OrderResource`, `OrderPolicy`, `OrderController`. Chạy test → PASS. Commit `feat(api): transactional order creation with idempotency and server pricing`.
 
 ### Task 5: Mini App — Auth Client, Cart State & Order API Layer
 
@@ -121,8 +121,8 @@
 - `addCartItem(items, product, qty)`, `updateCartQuantity(items, productId, qty)`, `removeCartItem(items, productId)`, `clearCart()`, `getCartTotals(items) -> { totalQuantity, estimatedAmount }`, `createIdempotencyKey()`.
 - `createOrder(input: { items: { product_id: number; quantity: number }[]; note?: string }, idempotencyKey: string): Promise<Order>`, `fetchMyOrders(): Promise<Order[]>`, `fetchOrder(id: number): Promise<Order>`.
 
-- [ ] Viết unit tests trong `cart-logic.test.ts` (AC-03: thêm món, cộng dồn số lượng, giới hạn tối đa 20, bỏ qua món hết hàng, cập nhật số lượng về 0 tự xóa, xóa món, tính tổng) và mở rộng `api-client.test.ts` (gửi `Authorization: Bearer` và `Idempotency-Key` trong `apiPost`).
-- [ ] Chạy `npm test` → FAIL. Hiện thực hóa các module. Chạy `npm test` & `npx tsc --noEmit` → PASS. Commit `feat(miniapp): auth, cart state logic, and orders api client`.
+- [x] Viết unit tests trong `cart-logic.test.ts` (AC-03: thêm món, cộng dồn số lượng, giới hạn tối đa 20, bỏ qua món hết hàng, cập nhật số lượng về 0 tự xóa, xóa món, tính tổng) và mở rộng `api-client.test.ts` (gửi `Authorization: Bearer` và `Idempotency-Key` trong `apiPost`).
+- [x] Chạy `npm test` → FAIL. Hiện thực hóa các module. Chạy `npm test` & `npx tsc --noEmit` → PASS. Commit `feat(miniapp): auth, cart state logic, and orders api client`.
 
 ### Task 6: Mini App — Giao diện Giỏ hàng, Đặt món, Đơn của tôi & Chi tiết đơn
 
@@ -130,18 +130,18 @@
 - Create: `miniapp/src/components/bottom-nav.tsx`, `miniapp/src/pages/cart.tsx`, `miniapp/src/pages/orders.tsx`, `miniapp/src/pages/order-detail.tsx`
 - Modify: `miniapp/src/pages/menu.tsx`, `miniapp/src/pages/product-detail.tsx`, `miniapp/src/components/layout.tsx`
 
-- [ ] Tự động khởi tạo phiên đăng nhập khách hàng (`useAuthSession`: ưu tiên Zalo `getAccessToken()` → `/auth/zalo`, fallback sang `/auth/demo` khi chạy trình duyệt local).
-- [ ] `MenuPage` & `ProductDetailPage`: thêm nút `"+ Thêm"` / bộ chọn số lượng + `"Thêm vào giỏ"` cho món còn hàng; thanh nổi xem nhanh giỏ hàng.
-- [ ] `CartPage` (`/cart`): tăng/giảm/xóa món, nhập ghi chú (`maxLength={500}`), sinh `Idempotency-Key` cố định theo fingerprint giỏ hàng để chống bấm đúp, gọi `POST /api/v1/orders`, xóa giỏ và chuyển tới `/orders/:id`.
-- [ ] `OrdersPage` (`/orders`) & `OrderDetailPage` (`/orders/:id`): hiển thị danh sách lịch sử đơn và chi tiết từng món, mã đơn `SC-...`, nhãn trạng thái màu ngữ nghĩa, nút làm mới + polling tự động 7 giây cho đơn chưa kết thúc.
-- [ ] Kiểm chứng `npm test`, `npx tsc --noEmit`, `npm run build` → PASS. Commit `feat(miniapp): cart checkout and order history screens`.
+- [x] Tự động khởi tạo phiên đăng nhập khách hàng (`useAuthSession`: ưu tiên Zalo `getAccessToken()` → `/auth/zalo`, fallback sang `/auth/demo` khi chạy trình duyệt local).
+- [x] `MenuPage` & `ProductDetailPage`: thêm nút `"+ Thêm"` / bộ chọn số lượng + `"Thêm vào giỏ"` cho món còn hàng; thanh nổi xem nhanh giỏ hàng.
+- [x] `CartPage` (`/cart`): tăng/giảm/xóa món, nhập ghi chú (`maxLength={500}`), sinh `Idempotency-Key` cố định theo fingerprint giỏ hàng để chống bấm đúp, gọi `POST /api/v1/orders`, xóa giỏ và chuyển tới `/orders/:id`.
+- [x] `OrdersPage` (`/orders`) & `OrderDetailPage` (`/orders/:id`): hiển thị danh sách lịch sử đơn và chi tiết từng món, mã đơn `SC-...`, nhãn trạng thái màu ngữ nghĩa, nút làm mới + polling tự động 7 giây cho đơn chưa kết thúc.
+- [x] Kiểm chứng `npm test`, `npx tsc --noEmit`, `npm run build` → PASS. Commit `feat(miniapp): cart checkout and order history screens`.
 
 ### Task 7: Cập nhật tài liệu & Cổng chất lượng cuối cho S2
 
 **Files:**
 - Modify: `docs/api-contract.md`, `README.md`, `docs/PROJECT_STATE.md`, `docs/superpowers/plans/2026-11-14-s2-checkout-slice.md`
 
-- [ ] Bổ sung tài liệu API cho `/auth/*` và `/orders*` vào `docs/api-contract.md`.
-- [ ] Cập nhật `README.md` và `docs/PROJECT_STATE.md` với tiến độ S2.
-- [ ] Chạy toàn bộ cổng chất lượng: `php artisan test`, `vendor\bin\pint --test`, `npm test`, `npx tsc --noEmit`, `npm run build`.
-- [ ] Commit `docs: s2 handoff`.
+- [x] Bổ sung tài liệu API cho `/auth/*` và `/orders*` vào `docs/api-contract.md`.
+- [x] Cập nhật `README.md` và `docs/PROJECT_STATE.md` với tiến độ S2.
+- [x] Chạy toàn bộ cổng chất lượng: `php artisan test`, `vendor\bin\pint --test`, `npm test`, `npx tsc --noEmit`, `npm run build`.
+- [x] Commit `docs: s2 handoff`.
