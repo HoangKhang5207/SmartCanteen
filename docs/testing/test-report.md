@@ -13,11 +13,11 @@
 
 | Hạng mục Kiểm thử | Công cụ | Số bộ test (Suites) | Số bài test (Tests) | Số khẳng định (Assertions) | Kết quả |
 |---|---|---|---|---|---|
-| **Backend Integration & Feature Tests** | PHPUnit + PostgreSQL | `14` | `49` | `442` | **100% PASS (`49/49`)** |
+| **Backend Integration & Feature Tests** | PHPUnit + PostgreSQL | `14` | `52` | `497` | **100% PASS (`52/52`)** |
 | **Backend Code Style & Formatting** | Laravel Pint | Toàn bộ `api/` | — | — | **PASS (`{"tool":"pint","result":"passed"}`)** |
-| **Frontend Unit Tests** | Vitest | `4` | `15` | `32` | **100% PASS (`15/15`)** |
+| **Frontend Unit Tests** | Vitest | `5` | `18` | `41` | **100% PASS (`18/18`)** |
 | **Frontend Static Type Checking** | TypeScript (`tsc --noEmit`) | Toàn bộ `miniapp/src` | — | — | **PASS (`0 errors`)** |
-| **Frontend Production Bundle Build** | Vite (`npm run build`) | `miniapp/www` | — | — | **PASS (`587 modules`)** |
+| **Frontend Production Bundle Build** | Vite (`npm run build`) | `miniapp/www` | — | — | **PASS (`588 modules`)** |
 
 ---
 
@@ -46,3 +46,4 @@
 2. **`src/lib/api-client.test.ts`** (`5 tests`) — Kiểm tra `apiGet`, `apiPost`, truyền header `Authorization: Bearer <token>`, truyền `Idempotency-Key`, và bóc tách lỗi `ApiError`.
 3. **`src/features/cart/cart-logic.test.ts`** (`5 tests`) — Kiểm tra thêm món, cộng dồn số lượng, giới hạn tối đa `20`, chặn món `is_available = false`, giảm về `0` tự xóa, và tính `computeCartFingerprint` phục vụ `Idempotency-Key`.
 4. **`src/components/product-image.test.ts`** (`4 tests`) — Kiểm tra chuẩn hóa đường dẫn hình ảnh sản phẩm (`resolveProductImageUrl`) cho cả đường dẫn nội bộ `/images/products/<slug>.jpg` và URL `https://...`.
+5. **`src/components/pagination-bar.test.ts`** (`3 tests`) — Kiểm tra `normalizePaginatedResult` và thuật toán tính cửa sổ trang `buildPageItems` (`1 ... current-1 current current+1 ... last`).
