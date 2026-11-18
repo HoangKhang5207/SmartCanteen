@@ -131,3 +131,9 @@ Desktop.ini
 *.bak
 *.tmp
 cloudflared*
+.agents/
+.claude/
+AGENTS.md
+CLAUDE.md
+BaiTestPart2.md
+skills-lock.json
