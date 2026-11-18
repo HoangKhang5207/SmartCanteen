@@ -35,6 +35,7 @@
 - Custom components:
   - `miniapp/src/components/brand-logo.tsx` (`BrandLogo` — renders `canteen-logo.jpg` with accessible `alt` and optional tagline).
   - `miniapp/src/components/product-image.tsx` (`ProductImage` — renders uniform-dimension product photos across `card` `80×80px`, `cart` `56×56px`, and `detail` `aspect-[4/3] max-h-64` with `object-cover object-center`, `loading="lazy"`, and automatic `onError` fallback to `canteen-logo.jpg`).
+  - `miniapp/src/components/pagination-bar.tsx` (`PaginationBar` — accessible, mobile-ergonomic pagination bar with `from–to / total` summary, windowed page buttons, `aria-current="page"`, and smooth scroll-to-top).
   - `miniapp/src/components/state-views.tsx` (`LoadingState`, `ErrorState`, `EmptyState`).
   - `miniapp/src/components/bottom-nav.tsx` (`BottomNav` — persistent navigation between Thực đơn, Giỏ hàng, Đơn của tôi).
 

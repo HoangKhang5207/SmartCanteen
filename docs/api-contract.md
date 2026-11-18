@@ -43,7 +43,9 @@
   |---|---|---|---|
   | `category_id` | `integer` | Không | Phải tồn tại trong bảng `categories` (`exists:categories,id`) |
   | `search` | `string` | Không | Tối đa 100 ký tự; tìm kiếm không phân biệt hoa thường trên `name` (hỗ trợ tiếng Việt) |
-- **Response `200 OK`:**
+  | `page` | `integer` | Không | Số trang hiện tại (`min:1`, mặc định `1`) |
+  | `per_page` | `integer` | Không | Số món mỗi trang (`min:1, max:100`, mặc định `12`; Mini App sử dụng `8`) |
+- **Response `200 OK`:** Trả về mảng `data` kèm đối tượng `meta` (`current_page`, `last_page`, `per_page`, `total`, `from`, `to`) và `links` (`first`, `last`, `prev`, `next`) chuẩn Laravel Resource Pagination:
   ```json
   {
     "data": [
@@ -214,11 +216,16 @@
 - **Response `409 Conflict`:** Khi tái sử dụng `Idempotency-Key` với payload khác.
 - **Response `422 Unprocessable Entity`:** Khi thiếu `Idempotency-Key`, số lượng ngoài khoảng `1..20`, hoặc có món không khả dụng.
 
-### 3.2. Danh sách đơn hàng của tôi
+### 3.2. Danh sách đơn hàng của tôi (Có phân trang)
 
 - **Endpoint:** `GET /api/v1/orders`
 - **Xác thực:** `Bearer <token>` (`auth:sanctum`)
-- **Response `200 OK`:** Danh sách `OrderResource` của riêng người dùng đang đăng nhập, sắp xếp mới nhất trước (`created_at DESC, id DESC`).
+- **Query Parameters:**
+  | Tham số | Kiểu | Bắt buộc | Quy tắc |
+  |---|---|---|---|
+  | `page` | `integer` | Không | Số trang hiện tại (`min:1`, mặc định `1`) |
+  | `per_page` | `integer` | Không | Số đơn hàng mỗi trang (`min:1, max:50`, mặc định `10`; Mini App sử dụng `6`) |
+- **Response `200 OK`:** Danh sách `OrderResource` của riêng người dùng đang đăng nhập kèm `meta` và `links` phân trang, sắp xếp mới nhất trước (`created_at DESC, id DESC`).
 
 ### 3.3. Chi tiết đơn hàng của tôi
 
@@ -242,8 +249,10 @@
   |---|---|---|---|
   | `status` | `string` | Không | Không phân biệt hoa thường (`PENDING`, `PREPARING`, `READY`, `COMPLETED`, `CANCELLED`); truyền giá trị ngoài danh sách trả `422 Unprocessable Entity` |
   | `search` | `string` | Không | Tìm kiếm không phân biệt hoa thường theo mã đơn (`code`, tối đa 64 ký tự) |
-  | `limit` | `integer` | Không | Số lượng bản ghi tối đa trả về (`1..100`, mặc định `100`); ngoài khoảng trả `422` |
-- **Response `200 OK`:** Danh sách `OrderResource` (bao gồm `customer_name`, `items` và `status_logs`).
+  | `page` | `integer` | Không | Số trang hiện tại (`min:1`, mặc định `1`) |
+  | `per_page` | `integer` | Không | Số lượng bản ghi mỗi trang (`1..100`, mặc định `20`); ngoài khoảng trả `422` |
+  | `limit` | `integer` | Không | Bí danh tương thích ngược của `per_page` (`1..100`); ngoài khoảng trả `422` |
+- **Response `200 OK`:** Danh sách `OrderResource` (bao gồm `customer_name`, `items` và `status_logs`) kèm `meta` và `links` phân trang.
 
 ### 4.2. Chuyển trạng thái đơn hàng (State Machine + Optimistic Locking)
 

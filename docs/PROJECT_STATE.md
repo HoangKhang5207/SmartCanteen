@@ -41,9 +41,9 @@
   - [x] Task 4: Hoàn thiện tài liệu Kế hoạch (`docs/plans/roadmap-and-slices.md`), Kịch bản & Báo cáo kiểm thử (`docs/test-cases.md`, `docs/testing/test-report.md`), Kịch bản trình diễn 8 bước (`docs/demo-script.md`) và Tài liệu phát hành / Runbook S5 (`docs/releases/release-v0.1.0-mvp.md`, `docs/releases/s5-staging-zalo-deploy-runbook.md`).
 
 - **Kết quả cổng chất lượng (Quality Gates):**
-  - `php artisan test` (PostgreSQL `titkul_canteen_test`): **PASS** — 14 test suites, 49 tests, 442 assertions.
+  - `php artisan test` (PostgreSQL `titkul_canteen_test`): **PASS** — 14 test suites, 52 tests, 497 assertions.
   - `vendor\bin\pint --test`: **PASS** — `{"tool":"pint","result":"passed"}`.
-  - `npm test` (Vitest): **PASS** — 4 test files, 15 tests.
+  - `npm test` (Vitest): **PASS** — 5 test files, 18 tests.
   - `npx tsc --noEmit`: **PASS** — 0 lỗi kiểu dữ liệu.
   - `npm run build` (Vite production build): **PASS** — tạo bundle tại `miniapp/www/`.
 
