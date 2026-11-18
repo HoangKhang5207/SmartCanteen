@@ -240,8 +240,9 @@
 - **Query Parameters:**
   | Tham số | Kiểu | Bắt buộc | Quy tắc |
   |---|---|---|---|
-  | `status` | `string` | Không | Lọc theo trạng thái (`PENDING`, `PREPARING`, `READY`, `COMPLETED`, `CANCELLED`) |
+  | `status` | `string` | Không | Không phân biệt hoa thường (`PENDING`, `PREPARING`, `READY`, `COMPLETED`, `CANCELLED`); truyền giá trị ngoài danh sách trả `422 Unprocessable Entity` |
   | `search` | `string` | Không | Tìm kiếm không phân biệt hoa thường theo mã đơn (`code`, tối đa 64 ký tự) |
+  | `limit` | `integer` | Không | Số lượng bản ghi tối đa trả về (`1..100`, mặc định `100`); ngoài khoảng trả `422` |
 - **Response `200 OK`:** Danh sách `OrderResource` (bao gồm `customer_name`, `items` và `status_logs`).
 
 ### 4.2. Chuyển trạng thái đơn hàng (State Machine + Optimistic Locking)
