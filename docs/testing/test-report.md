@@ -13,11 +13,11 @@
 
 | Hạng mục Kiểm thử | Công cụ | Số bộ test (Suites) | Số bài test (Tests) | Số khẳng định (Assertions) | Kết quả |
 |---|---|---|---|---|---|
-| **Backend Integration & Feature Tests** | PHPUnit + PostgreSQL | `14` | `49` | `344` | **100% PASS (`49/49`)** |
+| **Backend Integration & Feature Tests** | PHPUnit + PostgreSQL | `14` | `49` | `442` | **100% PASS (`49/49`)** |
 | **Backend Code Style & Formatting** | Laravel Pint | Toàn bộ `api/` | — | — | **PASS (`{"tool":"pint","result":"passed"}`)** |
-| **Frontend Unit Tests** | Vitest | `3` | `11` | `26` | **100% PASS (`11/11`)** |
+| **Frontend Unit Tests** | Vitest | `4` | `15` | `32` | **100% PASS (`15/15`)** |
 | **Frontend Static Type Checking** | TypeScript (`tsc --noEmit`) | Toàn bộ `miniapp/src` | — | — | **PASS (`0 errors`)** |
-| **Frontend Production Bundle Build** | Vite (`npm run build`) | `miniapp/www` | — | — | **PASS (`586 modules`)** |
+| **Frontend Production Bundle Build** | Vite (`npm run build`) | `miniapp/www` | — | — | **PASS (`587 modules`)** |
 
 ---
 
@@ -26,7 +26,7 @@
 1. **`Tests\Unit\ExampleTest`** (`1 test`) — Kiểm tra khởi tạo môi trường unit test cơ bản.
 2. **`Tests\Feature\ExampleTest`** (`1 test`) — Kiểm tra health route gốc.
 3. **`Tests\Feature\Menu\SchemaTest`** (`2 tests`) — Kiểm tra lưu trữ số nguyên `VND` và khóa ngoại `restrictOnDelete` giữa `categories` và `products`.
-4. **`Tests\Feature\Menu\MenuSeederTest`** (`2 tests`) — Kiểm tra `MenuSeeder` tạo đủ `>= 3` danh mục, `>= 10` món ăn và tính idempotent.
+4. **`Tests\Feature\Menu\MenuSeederTest`** (`2 tests`) — Kiểm tra `MenuSeeder` tạo đủ `6` danh mục, `30` món ăn kèm đường dẫn ảnh chuẩn `/images/products/<slug>.jpg` và tính idempotent.
 5. **`Tests\Feature\Menu\MenuApiTest`** (`8 tests`) — Kiểm tra `GET /api/v1/categories`, `GET /api/v1/products` (lọc danh mục, tìm kiếm tiếng Việt không phân biệt hoa thường, ẩn danh mục ngừng hoạt động, lỗi `422`), `GET /api/v1/products/{id}` (`200` / `404`).
 6. **`Tests\Feature\CorsTest`** (`2 tests`) — Kiểm tra preflight `OPTIONS` từ `https://h5.zdn.vn` được chấp nhận và origin lạ bị từ chối.
 7. **`Tests\Feature\Order\OrderSchemaTest`** (`3 tests`) — Kiểm tra schema `users` (khách Zalo không cần email/password), `orders` + `order_items` (unique `idempotency_key` theo user) và `OrderStatus::allowedTransitions()`.
@@ -45,3 +45,4 @@
 1. **`src/lib/format.test.ts`** (`1 test`) — Định dạng tiền tệ `formatVnd` sang chuẩn tiếng Việt (`45.000 ₫`).
 2. **`src/lib/api-client.test.ts`** (`5 tests`) — Kiểm tra `apiGet`, `apiPost`, truyền header `Authorization: Bearer <token>`, truyền `Idempotency-Key`, và bóc tách lỗi `ApiError`.
 3. **`src/features/cart/cart-logic.test.ts`** (`5 tests`) — Kiểm tra thêm món, cộng dồn số lượng, giới hạn tối đa `20`, chặn món `is_available = false`, giảm về `0` tự xóa, và tính `computeCartFingerprint` phục vụ `Idempotency-Key`.
+4. **`src/components/product-image.test.ts`** (`4 tests`) — Kiểm tra chuẩn hóa đường dẫn hình ảnh sản phẩm (`resolveProductImageUrl`) cho cả đường dẫn nội bộ `/images/products/<slug>.jpg` và URL `https://...`.

@@ -46,3 +46,20 @@ Mỗi màn hình trên Zalo Mini App (`MenuPage`, `ProductDetailPage`, `CartPage
 2. **Error State (`ErrorState`):** Hiển thị thông báo lỗi rõ ràng (`role="alert"`) và nút **"Thử lại"** có trạng thái loading khi đang tải lại (`isRetrying`).
 3. **Empty State (`EmptyState`):** Hướng dẫn thân thiện khi tìm kiếm không có món ăn, giỏ hàng trống hoặc chưa có đơn hàng nào, kèm nút điều hướng về Thực đơn.
 4. **Success State:** Bố cục thẻ một cột ưu tiên thiết bị di động (`320px–480px`), kích thước nút bấm cảm ứng tối thiểu `36px–44px`, thanh điều hướng đáy cố định (`BottomNav`) hiển thị badge tổng số lượng món trong giỏ theo thời gian thực.
+
+---
+
+## 5. Quy chuẩn Hiển thị Hình ảnh Món ăn Đồng nhất & Sắc nét (`<ProductImage />`)
+
+Component [product-image.tsx](file:///d:/Coding/TitKul_ProjectTest/TestPart2/miniapp/src/components/product-image.tsx) chuẩn hóa việc hiển thị hình ảnh sản phẩm trên toàn bộ Mini App:
+
+1. **Thư mục đặt ảnh tải về:**
+   - Đặt file ảnh tải từ Internet vào thư mục [miniapp/public/images/products/](file:///d:/Coding/TitKul_ProjectTest/TestPart2/miniapp/public/images/products/README.md) (và bản sao tại [api/public/images/products/](file:///d:/Coding/TitKul_ProjectTest/TestPart2/api/public/images/products/README.md) nếu muốn hiển thị trên bảng Admin `/admin/products`) theo đúng tên `<slug>.jpg` của từng món ăn.
+   - Hoặc dán trực tiếp URL ảnh (`https://...`) vào ô **Đường dẫn hoặc URL hình ảnh** trong trang Quản trị (`/admin/products/{id}/edit`).
+2. **Kích thước khung cố định & tự động cắt khung sắc nét (`object-cover object-center`):**
+   - **Danh sách Thực đơn (`variant="card"`):** Khung vuông cố định `80×80 px` (`w-20 h-20 aspect-square rounded-lg`), tự động `object-cover object-center` giúp mọi bức ảnh (dù tỷ lệ gốc là `1:1`, `4:3` hay `16:9`) đều hiển thị đồng đều 100% kích thước mà không bị méo hình.
+   - **Giỏ hàng (`variant="cart"`):** Khung vuông cố định `56×56 px` (`w-14 h-14 aspect-square rounded-lg`) với `object-cover object-center`.
+   - **Chi tiết món ăn (`variant="detail"`):** Khung ngang chuẩn `aspect-[4/3] max-h-64` (`w-full object-cover object-center`).
+3. **Độ phân giải khuyến nghị & Cơ chế Fallback an toàn:**
+   - Khuyến nghị tải ảnh có kích thước từ **`800×800 px` (tỷ lệ `1:1`)** hoặc **`800×600 px` (tỷ lệ `4:3`)**, định dạng `.jpg` hoặc `.webp` để đạt độ nét cao trên màn hình Retina/High-DPI của điện thoại.
+   - Khi một món ăn chưa có file ảnh trong thư mục `miniapp/public/images/products/` (hoặc URL ảnh bị lỗi mạng), sự kiện `onError` trên `<ProductImage />` tự động chuyển về hiển thị logo thương hiệu `canteen-logo.jpg` (`object-contain`), đảm bảo giao diện không bao giờ xuất hiện biểu tượng ảnh vỡ (broken image icon).

@@ -98,7 +98,7 @@ erDiagram
 
 ### 2.2. Bảng `categories`
 - **Migration:** `2026_11_14_101854_create_categories_table.php`
-- **Đặc điểm:** Quản lý nhóm thực đơn (`Cơm`, `Bún & Phở`, `Đồ uống`, `Tráng miệng`). Khi `is_active = false`, danh mục và toàn bộ các món thuộc danh mục đó được ẩn khỏi API thực đơn công khai và không thể đặt mới.
+- **Đặc điểm:** Quản lý nhóm thực đơn (`Cơm`, `Bún & Phở`, `Mì & Món Á`, `Bánh mì & Ăn nhẹ`, `Đồ uống`, `Tráng miệng`). Khi `is_active = false`, danh mục và toàn bộ các món thuộc danh mục đó được ẩn khỏi API thực đơn công khai và không thể đặt mới.
 
 ### 2.3. Bảng `products`
 - **Migration:** `2026_11_14_101855_create_products_table.php`
@@ -132,8 +132,8 @@ erDiagram
 Chạy lệnh `php artisan migrate --seed` sẽ thực thi 2 Seeder idempotent (có thể chạy lặp lại nhiều lần không gây trùng dữ liệu):
 
 1. **`MenuSeeder` (`api/database/seeders/MenuSeeder.php`):**
-   - Khởi tạo **4 danh mục** (`Cơm`, `Bún & Phở`, `Đồ uống`, `Tráng miệng`).
-   - Khởi tạo **12 món ăn** với giá từ `15.000 ₫` đến `55.000 ₫` (trong đó có món *"Bún bò Huế đặc biệt"* được đặt `is_available = false` để kiểm chứng trực tiếp giao diện "Hết món" và quy tắc chặn đặt món ngừng bán **AC-05**).
+   - Khởi tạo **6 danh mục** (`Cơm`, `Bún & Phở`, `Mì & Món Á`, `Bánh mì & Ăn nhẹ`, `Đồ uống`, `Tráng miệng`).
+   - Khởi tạo **30 món ăn** với giá từ `15.000 ₫` đến `55.000 ₫`, mỗi món được gán sẵn đường dẫn hình ảnh chuẩn `/images/products/<slug>.jpg` (trong đó có món *"Cơm cá kho tộ miền Tây"* và *"Bánh canh cua giò heo"* được đặt `is_available = false` để kiểm chứng trực tiếp giao diện "Hết món" và quy tắc chặn đặt món ngừng bán **AC-05**).
 2. **`StaffSeeder` (`api/database/seeders/StaffSeeder.php`):**
    - Tài khoản Admin: `admin@smartcanteen.local` / mật khẩu `Admin@123456` (`role = admin`).
    - Tài khoản Staff: `staff@smartcanteen.local` / mật khẩu `Staff@123456` (`role = staff`).
