@@ -1,12 +1,133 @@
-node_modules/
-vendor/
+# =============================================================================
+# SMART CANTEEN MONOREPO — ROOT .GITIGNORE
+# Bao phủ: Root Workspace, Backend Laravel (api/) và Frontend Zalo Mini App (miniapp/)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. BIẾN MÔI TRƯỜNG, KHÓA BÍ MẬT & TOKEN (TUYỆT ĐỐI KHÔNG PUSH LÊN GITHUB)
+# -----------------------------------------------------------------------------
 .env
 .env.*
 !.env.example
-*.log
-miniapp/dist/
-miniapp/www/
+api/.env
+api/.env.*
+!api/.env.example
+miniapp/.env
+miniapp/.env.*
+!miniapp/.env.example
+
+*.key
+*.pem
+*.pfx
+*.p12
+*.crt
+auth.json
+api/auth.json
 api/storage/*.key
+
+# -----------------------------------------------------------------------------
+# 2. DỮ LIỆU CỤC BỘ, CƠ SỞ DỮ LIỆU TẠM & THƯ MỤC AI SCRATCH (ROOT)
+# -----------------------------------------------------------------------------
 .local/
+pgdata/
+*.pgdata/
 .superpowers/
+.agy/
+
+# -----------------------------------------------------------------------------
+# 3. BACKEND PROJECT — LARAVEL 13 & PHP (api/)
+# -----------------------------------------------------------------------------
+vendor/
+api/vendor/
+api/node_modules/
+
+# Laravel build & symlinked storage
+api/public/build/
+api/public/hot
+api/public/storage
+
+# Laravel runtime caches, sessions, compiled Blade views & logs
+api/bootstrap/cache/*.php
+!api/bootstrap/cache/.gitignore
+api/storage/logs/*.log
+api/storage/pail/
+api/storage/framework/views/*.php
+api/storage/framework/cache/data/*
+api/storage/framework/sessions/*
+api/storage/framework/testing/*
+api/storage/app/private/*
+api/storage/app/public/*
+!api/storage/**/.gitignore
+
+# Local SQLite files (dự án dùng PostgreSQL, chặn file sqlite phát sinh ngoài ý muốn)
+*.sqlite
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+api/database/*.sqlite
+
+# PHPUnit, Pint & PHP Tooling caches
+.phpunit.result.cache
+.phpunit.cache/
+api/.phpunit.result.cache
+api/.phpunit.cache/
+api/.phpactor.json
+api/coverage/
+Homestead.json
+Homestead.yaml
+
+# -----------------------------------------------------------------------------
+# 4. FRONTEND PROJECT — ZALO MINI APP, REACT, VITE & VITEST (miniapp/)
+# -----------------------------------------------------------------------------
+node_modules/
+miniapp/node_modules/
+
+# Gói build đầu ra của Vite & Zalo Mini App CLI (zmp build / zmp deploy)
+www/
+dist/
+build/
+miniapp/www/
+miniapp/dist/
+miniapp/build/
+miniapp/.zmp/
+miniapp/.vite/
+miniapp/coverage/
+
+# TypeScript, ESLint & Node caches
+*.tsbuildinfo
+miniapp/*.tsbuildinfo
+.eslintcache
+miniapp/.eslintcache
+.npm/
+.node_repl_history
+.yarn-integrity
+
+# Runtime PIDs & logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# -----------------------------------------------------------------------------
+# 5. HỆ ĐIỀU HÀNH, IDE / EDITOR & FILE TẠM
+# -----------------------------------------------------------------------------
 .DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+.fleet/
+.nova/
+.zed/
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+cloudflared*
