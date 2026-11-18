@@ -26,13 +26,19 @@ api/auth.json
 api/storage/*.key
 
 # -----------------------------------------------------------------------------
-# 2. DỮ LIỆU CỤC BỘ, CƠ SỞ DỮ LIỆU TẠM & THƯ MỤC AI SCRATCH (ROOT)
+# 2. DỮ LIỆU CỤC BỘ, CƠ SỞ DỮ LIỆU TẠM & THƯ MỤC AI / ĐỀ BÀI NỘI BỘ (ROOT)
 # -----------------------------------------------------------------------------
 .local/
 pgdata/
 *.pgdata/
 .superpowers/
 .agy/
+.agents/
+.claude/
+AGENTS.md
+CLAUDE.md
+BaiTestPart2.md
+skills-lock.json
 
 # -----------------------------------------------------------------------------
 # 3. BACKEND PROJECT — LARAVEL 13 & PHP (api/)
