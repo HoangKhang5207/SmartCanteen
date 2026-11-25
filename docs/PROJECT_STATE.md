@@ -73,8 +73,8 @@
   - `miniapp/`: `npm test` PASS (5 files, 18 tests), `npx tsc --noEmit` PASS, `npm run build` PASS, `npm audit --omit=dev --audit-level=high` 0 lỗ hổng, Docker production image non-root UID `101`, `/healthz` trả `ok`, `/` trả `200`.
   - `compose.yaml` & `compose.prod.yaml` của cả 2 sub-repo PASS `docker compose config --quiet`; cả 2 workflow CI PASS YAML parser.
 - **Lộ trình tiếp theo (Trục 2 — Phân hệ Căn tin Số theo `FEATURES.md`, phương án `3A`):**
-  - Slice D1: **ĐÃ TRIỂN KHAI** (xem mục bên dưới).
-  - Slice D2: Hạn mức chi tiêu ngày + Lịch sử hạn mức (`LIMIT-01..13`) + Thanh toán trừ hạn mức & Chi tiết đơn gắn thẻ (`DETAIL-01..14`).
+  - Slice D1: **COMPLETED_VERIFIED & Đã merge vào `main` (`4c76e83` / `fa9418a` / `01c8db3`)**.
+  - Slice D2: **ĐANG TRIỂN KHAI** (xem mục bên dưới).
   - Slice D3: Hủy liên kết ngân hàng + OTP (`UNLINK-01..07`) + Quản trị Admin Blade + Kiểm thử E2E.
 
 ---
@@ -90,3 +90,16 @@
   - [x] Backend `api/`: 4 migrations PostgreSQL (kèm Partial Unique Index `WHERE status = 'ACTIVE'`), 3 Enums, 4 Models (`encrypted` cast cho STK/CCCD), `StudentCardSeeder`, `BankingGatewayInterface` + `MockEpayBankingGateway`, `DataMaskingService`, `StudentCardService`, `BankLinkingService`, 6 REST endpoints `/api/v1/canteen/*`.
   - [x] Frontend `miniapp/`: Mở rộng `BottomNav` thành 4 tab, bổ sung `StudentCardView`, `OtpCodeInput`, 3 trang `/canteen`, `/canteen/link-bank`, `/canteen/verify-otp` kèm Jotai in-memory draft & validation.
   - [x] Khắc phục 100% các điểm Critical & Important từ Code Review độc lập (chặn lách lockout qua `resend-otp`, sửa chỉnh chữ số giữa `OtpCodeInput`, chuẩn hóa thứ tự khóa `student_cards → bank_links → otp_verifications`, đưa `catch (UniqueConstraintViolationException)` ra ngoài `DB::transaction()`, wall-clock countdown & double-submit guards).
+
+---
+
+## Trục 2 · Slice D2 — Hạn mức Chi tiêu Hằng ngày, Lịch sử Hạn mức, Thanh toán Trừ Hạn mức & Chi tiết Đơn Gắn Thẻ
+
+- **Mã tác vụ:** `CANTEEN-D2-LIMIT-PAYMENT-ORDERS`
+- **Trạng thái:** `IN_PROGRESS` (đang chạy kiểm chứng cuối & Code Review)
+- **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-d2-spending-limit-orders-design.md` (APPROVED 2026-11-25)
+- **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-d2-spending-limit-orders.md`
+- **Nhánh hiện tại:** `feat/d2-spending-limit-orders` trên cả 3 repository (`root`, `api/`, `miniapp/`)
+- **Phạm vi đã hiện thực hóa:**
+  - [x] Backend `api/`: 3 migrations additive (`spending_limits`, `spending_limit_logs`, mở rộng `orders`), `PaymentMethod`/`PaymentStatus`, `SpendingLimitService` (lazy daily reset `Asia/Ho_Chi_Minh`), mở rộng `OrderService` (`createOrder` hỗ trợ thẻ học sinh, `createPosPurchase` `#POS-...`, `transitionStatus` tự hoàn hạn mức khi hủy đơn), 4 endpoints mới `/api/v1/canteen/cards/{cardId}/{spending-limit,limit-logs,orders,pos-purchases}`, + xử lý Slice D1 Backend Minors.
+  - [x] Frontend `miniapp/`: `SpendingLimitSheet` (`20k/30k/50k/100k` + tùy chỉnh), `LimitHistoryPage`, nâng cấp `CanteenHubPage` (hạn mức + đơn hàng gần đây + mô phỏng quẹt thẻ POS), `CartPage` (chọn thanh toán thẻ học sinh), `OrderDetailPage` (đủ 14 trường `DETAIL-01..14`), + xử lý Slice D1 Frontend A11y Minors.

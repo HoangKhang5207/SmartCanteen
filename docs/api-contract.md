@@ -328,4 +328,23 @@
 ### 5.5. Gửi lại mã OTP (`OTP-01..07`)
 - **Endpoint:** `POST /api/v1/canteen/bank-links/{bankLinkId}/resend-otp` (`auth:sanctum`)
 - **Response `200 OK`:** Cấp mã OTP mới (vô hiệu hóa mã cũ), cập nhật `remaining_resends`.
-- **Lỗi chuẩn:** `404`, `409`, `429` (`OTP_RESEND_COOLDOWN` kèm `meta.retry_after_seconds`, hoặc `OTP_MAX_RESENDS_EXCEEDED`).
+- **Lỗi chuẩn:** `404`, `409`, `429` (`OTP_RESEND_COOLDOWN` kèm `meta.retry_after_seconds`, hoặc `OTP_MAX_RESENDS_EXCEEDED`, hoặc `OTP_MAX_ATTEMPTS_EXCEEDED`).
+
+---
+
+## 6. Hạn mức Chi tiêu Ngày, Lịch sử Hạn mức & Thanh toán Trừ Hạn mức / POS (Trục 2 · Slice D2)
+
+### 6.1. Thiết lập / thay đổi hạn mức chi tiêu hằng ngày (`LIMIT-01..12`)
+- **Endpoint:** `PUT /api/v1/canteen/cards/{cardId}/spending-limit` (`auth:sanctum`)
+- **Request Body:** `{ "daily_limit": 100000, "reason": "Tùy chọn" }` (`0..5_000_000`, bội số `1000`).
+- **Response `200 OK`:** `{ "data": StudentCardResource }` (kèm `spending_limit: { daily_limit, spent_today, remaining_limit, effective_date }`).
+- **Lỗi:** `404` (thẻ người khác), `422` (`CARD_NOT_BANK_LINKED` hoặc validation).
+
+### 6.2. Lịch sử thay đổi hạn mức (`LIMIT-13`) & Đơn hàng gắn thẻ (`ORDER-01..07`)
+- **Endpoints:** `GET /api/v1/canteen/cards/{cardId}/limit-logs` và `GET /api/v1/canteen/cards/{cardId}/orders` (`auth:sanctum`, phân trang `page`/`per_page`).
+
+### 6.3. Mô phỏng Quẹt thẻ POS (`ORDER-01..07`, `DETAIL-01..14`)
+- **Endpoint:** `POST /api/v1/canteen/cards/{cardId}/pos-purchases` (`auth:sanctum`, header bắt buộc `Idempotency-Key`)
+- **Request Body:** `{ "items": [{ "product_id": 1, "quantity": 1 }], "store_name": "THCS Trần Phú" }`
+- **Response `201 Created` / `200 OK` (replay):** `{ "data": OrderResource }` với mã `POS-YYMMDD-XXXXXX`, `status = COMPLETED`, `payment_method = STUDENT_CARD_POS`, `payment_status = PAID`, `remaining_limit_snapshot`.
+- **Mở rộng `POST /api/v1/orders` & `OrderResource`:** Nhận tùy chọn `student_card_id` & `payment_method` (`COUNTER_CASH` | `STUDENT_CARD`), tự động hoàn hạn mức và chuyển `payment_status = REFUNDED` khi Staff/Admin hủy đơn thanh toán bằng thẻ trong ngày.
