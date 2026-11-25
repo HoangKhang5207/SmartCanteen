@@ -396,3 +396,29 @@
 - Tích hợp trên 4 điểm phát hành OTP (`bank-links`, `resend-otp`, `unlink/initiate`, `unlink/resend-otp`), điều khiển qua `SMS_DRIVER=log|esms|twilio`.
 - Response `data.otp` bổ sung `delivery_channel: "SMS"` và `delivery_provider`.
 - Nếu cổng SMS thất bại: rollback toàn bộ transaction và trả `503 Service Unavailable` (`error_code: "SMS_DELIVERY_FAILED"`).
+
+---
+
+## 9. `SandboxBankingGateway`, `VNPay Sandbox`, Webhook HMAC-SHA256 & Đối soát Ngân hàng (Trục 3 · Slice P2)
+
+### 9.1. Xử lý lỗi thanh toán ngân hàng (`POST /api/v1/orders` & `POST /api/v1/canteen/cards/{cardId}/pos-purchases`)
+- Hỗ trợ thêm `payment_method = "VNPAY"` trên `POST /api/v1/orders`.
+- Khi `BANKING_GATEWAY_DRIVER=sandbox`, các lỗi từ ngân hàng tự động rollback hạn mức (`spent_today` không bị trừ) nhưng ghi bền vững bản ghi vào sổ cái `payment_transactions`:
+  - `422 Unprocessable Entity` (`error_code: "INSUFFICIENT_BANK_BALANCE"`): tài khoản ngân hàng liên kết không đủ số dư.
+  - `502 Bad Gateway` (`error_code: "BANK_DECLINED"`): ngân hàng từ chối trích nợ.
+  - `504 Gateway Timeout` (`error_code: "GATEWAY_TIMEOUT"`): timeout từ cổng ngân hàng (`payment_transactions.status = TIMEOUT`).
+
+### 9.2. Webhook Ngân hàng Sandbox (`POST /api/v1/webhooks/banking/sandbox`)
+- Xác thực bằng header `X-Gateway-Timestamp` (cửa sổ `±300s`) và `X-Gateway-Signature = HMAC-SHA256(timestamp + "." + rawBody, BANKING_WEBHOOK_SECRET)` (`hash_equals`), chống replay idempotent bằng bảng `gateway_webhook_events`.
+- Hỗ trợ sự kiện: `CHARGE_SETTLED`, `CHARGE_FAILED`, `REFUND_SETTLED`.
+
+### 9.3. Cổng thanh toán `VNPay Sandbox` (chuẩn v2.1.0 `HMAC-SHA512`)
+- `POST /api/v1/payments/vnpay/create-url` (`auth:sanctum`, `throttle:20,1`): nhận `{ "order_id": 15 }` (chỉ chủ đơn `VNPAY` chưa thanh toán/thất bại), trả `{ payment_url, txn_ref, amount, expires_at, simulated }`.
+- `GET /api/v1/payments/vnpay/ipn`: xác thực `vnp_SecureHash`, đối chiếu số tiền `vnp_Amount === amount * 100`, cập nhật `orders.payment_status` & `payment_transactions` idempotent (`RspCode: 00/01/02/04/97`).
+- `GET /api/v1/payments/vnpay/return`: xác thực chữ ký trả về cho trình duyệt.
+
+### 9.4. Đối soát & Cấu hình Sandbox trên Admin Blade
+- `GET /admin/canteen/reconciliation` (`role:staff,admin`): xem phiên đối soát & sổ cái `payment_transactions`.
+- `POST /admin/canteen/reconciliation/run` & `PATCH /admin/canteen/reconciliation/items/{item}/resolve` (`role:admin`): chạy đối soát ngày & xác nhận xử lý chênh lệch.
+- `PUT /admin/canteen/cards/{studentCard}/sandbox-account` (`role:admin`): chỉnh số dư & chế độ mô phỏng tài khoản Sandbox.
+- Artisan CLI: `php artisan canteen:reconcile {date?} {--provider=sandbox_epay}`.

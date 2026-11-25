@@ -123,7 +123,7 @@
 ## Trục 3 · Slice P1 — Xác thực SĐT Zalo (Lazy Auth) & Cổng SMS OTP Thực tế
 
 - **Mã tác vụ:** `CANTEEN-P1-ZALO-PHONE-SMS-OTP`
-- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge/push trên từng repo)
+- **Trạng thái:** `MERGED_TO_MAIN` (`root @ 8bd8340`, `api @ 63e1d02`, `miniapp @ c7889be`)
 - **Lộ trình Trục 3:** `docs/superpowers/specs/2026-11-25-truc3-production-readiness-roadmap.md` (`APPROVED 2026-11-25`)
 - **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-p1-zalo-phone-auth-sms-otp-design.md` (`APPROVED 2026-11-25`)
 - **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-p1-zalo-phone-auth-sms-otp.md`
@@ -131,3 +131,16 @@
 - **Phạm vi đã hiện thực hóa:**
   - [x] Backend `api/`: 2 migrations additive (`users.phone` + `phone_verified_at`, `otp_verifications.delivery_*`), `PhoneNormalizer`, `ZaloIdentityService::resolvePhoneNumber()`, 3 endpoints `/api/v1/auth/{zalo-phone,demo-phone,logout}`, `SmsGatewayInterface` với 3 driver (`log`, `esms`, `twilio`), tích hợp rollback sạch vào `BankLinkingService`, + 2 test suites mới (`ZaloPhoneAuthTest`, `SmsOtpGatewayTest`).
   - [x] Frontend `miniapp/`: Kiến trúc **Lazy Auth** (Thực đơn/Chi tiết/Giỏ hàng Public 100%; Căn tin/Đơn hàng/Đặt đơn yêu cầu xác thực SĐT Zalo), `ZaloPhoneLoginPanel` & `ZaloPhoneLoginModal`, auto-fill SĐT phụ huynh ở `BankLinkFormPage`, nút Đăng xuất ở `CanteenHubPage`, + unit test `phone.test.ts`.
+
+---
+
+## Trục 3 · Slice P2 — `SandboxBankingGateway`, `VNPay Sandbox`, Sổ cái `payment_transactions`, Webhook HMAC-SHA256 & Đối soát Ngân hàng
+
+- **Mã tác vụ:** `CANTEEN-P2-SANDBOX-VNPAY-RECONCILIATION`
+- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge cục bộ vào `main` trên cả 3 repo)
+- **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-p2-sandbox-banking-vnpay-reconciliation-design.md` (`APPROVED 2026-11-25`)
+- **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-p2-sandbox-vnpay-reconciliation.md`
+- **Nhánh hiện tại:** `feat/p2-sandbox-vnpay-reconciliation` trên cả 3 repository (`root`, `api/`, `miniapp/`)
+- **Phạm vi đã hiện thực hóa:**
+  - [x] Backend `api/`: 4 migrations additive (`sandbox_bank_accounts`, `payment_transactions`, `reconciliation_batches`/`items`, `gateway_webhook_events`), `SandboxBankingGateway`, `PaymentLedgerService`, `BankingWebhookController` (HMAC-SHA256 + anti-replay), `VnpayGatewayService` & `VnpayPaymentController` (HMAC-SHA512 + IPN idempotent), `ReconciliationService` + CLI `canteen:reconcile`, Admin Blade `/admin/canteen/reconciliation` + khung Sandbox Account trên chi tiết thẻ, + 4 test suites mới & Slice P1 Minor SMS rollback test.
+  - [x] Frontend `miniapp/`: phương thức **Thanh toán VNPay (Sandbox)** trên `CartPage`, nút mở cổng VNPay & badge `FAILED`/`PENDING_RECONCILE` trên `OrderDetailPage`, unit test `payment.test.ts`, + Slice P1 Minor `VITE_DEMO_PHONE_LOGIN`.
