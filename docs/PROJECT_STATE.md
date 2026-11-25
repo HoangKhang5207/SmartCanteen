@@ -49,3 +49,30 @@
 
 - **Công việc tiếp theo (S5 — Khi được cấp quyền triển khai):**
   - Thực thi `docs/releases/s5-staging-zalo-deploy-runbook.md` để mở HTTPS tunnel/staging và deploy phiên bản Zalo Mini App Testing lấy mã QR cho Giám đốc.
+
+---
+
+## Trục 1 — Tách 2 Sub-repo Git Độc lập, Docker hóa & GitHub Actions CI
+
+- **Mã tác vụ:** `PLATFORM-SUBREPOS-DOCKER-CI`
+- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge/push trên từng repo)
+- **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-subrepos-docker-ci-design.md` (APPROVED 2026-11-25)
+- **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-truc1-subrepos-docker-ci.md`
+- **Nhánh hiện tại:**
+  - Workspace cha: `feat/subrepos-docker-ci` (đã detach `api/` và `miniapp/` khỏi index cha, giữ nguyên lịch sử `main`)
+  - Sub-repo `api/`: `feat/docker-ci` (tách từ `main @ 1532dd0` giữ trọn lịch sử S1–S5)
+  - Sub-repo `miniapp/`: `feat/docker-ci` (tách từ `main @ 142dd27` giữ trọn lịch sử S1–S5)
+- **Các bước đã triển khai:**
+  - [x] Tách `api/` và `miniapp/` thành 2 Git repository độc lập via `git subtree split`, bảo toàn `.env`, `vendor/`, `node_modules/`, `FEATURES.md`, và video gốc.
+  - [x] Bổ sung bộ Docker multi-stage chuẩn Production-Ready cho `api/` (`Dockerfile`, `compose.yaml`, `compose.prod.yaml`, Nginx unprivileged + immutable `docker/nginx/Dockerfile`, PHP 8.4 FPM non-root `appuser`, PostgreSQL 17 tự khởi tạo 2 DB demo/test).
+  - [x] Bổ sung bộ Docker multi-stage chuẩn Production-Ready cho `miniapp/` (`Dockerfile`, `compose.yaml`, `compose.prod.yaml`, Nginx unprivileged + `/healthz`).
+  - [x] Bổ sung GitHub Actions CI độc lập tại `api/.github/workflows/ci.yml` và `miniapp/.github/workflows/ci.yml`.
+  - [x] Cập nhật tài liệu `api/README.md`, `miniapp/README.md`, `README.md`.
+- **Kết quả cổng chất lượng (Quality Gates — Đã kiểm chứng thực tế):**
+  - `api/` (chạy trong Docker PHP 8.4 + PostgreSQL 17): `composer validate --strict` PASS, `composer audit --locked` 0 lỗ hổng, `vendor/bin/pint --test` PASS (89 files), `php artisan test --compact` PASS (**53 passed, 506 assertions**), Nginx `/up` trả `200`, production image non-root `appuser` & không có `composer`.
+  - `miniapp/`: `npm test` PASS (5 files, 18 tests), `npx tsc --noEmit` PASS, `npm run build` PASS, `npm audit --omit=dev --audit-level=high` 0 lỗ hổng, Docker production image non-root UID `101`, `/healthz` trả `ok`, `/` trả `200`.
+  - `compose.yaml` & `compose.prod.yaml` của cả 2 sub-repo PASS `docker compose config --quiet`; cả 2 workflow CI PASS YAML parser.
+- **Lộ trình tiếp theo (Trục 2 — Phân hệ Căn tin Số theo `FEATURES.md`, phương án `3A`):**
+  - Slice D1: Hồ sơ Học sinh, Thẻ học sinh thông minh (`CARD-01..07`) & Liên kết ngân hàng + OTP 6 số (`BANK-01..16`, `OTP-01..08`).
+  - Slice D2: Hạn mức chi tiêu ngày + Lịch sử hạn mức (`LIMIT-01..13`) + Thanh toán trừ hạn mức & Chi tiết đơn gắn thẻ (`DETAIL-01..14`).
+  - Slice D3: Hủy liên kết ngân hàng + OTP (`UNLINK-01..07`) + Quản trị Admin Blade + Kiểm thử E2E.
