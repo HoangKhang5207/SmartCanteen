@@ -422,3 +422,28 @@
 - `POST /admin/canteen/reconciliation/run` & `PATCH /admin/canteen/reconciliation/items/{item}/resolve` (`role:admin`): chạy đối soát ngày & xác nhận xử lý chênh lệch.
 - `PUT /admin/canteen/cards/{studentCard}/sandbox-account` (`role:admin`): chỉnh số dư & chế độ mô phỏng tài khoản Sandbox.
 - Artisan CLI: `php artisan canteen:reconcile {date?} {--provider=sandbox_epay}`.
+
+---
+
+## 10. Trục 3 · Slice P3 — Tồn kho Nguyên tử, POS Staff Terminal, CRUD Học sinh & RBAC 4 Vai trò
+
+### 10.1. Tồn kho Sản phẩm (`ProductResource` & Lỗi `INSUFFICIENT_STOCK`)
+- `GET /api/v1/products`, `GET /api/v1/products/{id}` trả thêm:
+  - `stock_quantity` (`int|null` — `null`: không giới hạn, `0`: hết hàng, `> 0`: số phần còn lại), `low_stock_threshold` (`int`, mặc định `5`), `is_in_stock` (`bool`).
+- Khi đặt đơn vượt tồn kho (`POST /api/v1/orders`, `POST /api/v1/canteen/cards/{cardId}/pos-purchases`, `POST /admin/pos/checkout`): trả `422` kèm `error_code: "INSUFFICIENT_STOCK"` và `meta: { product_id, product_name, available_stock, requested_quantity }`.
+- Khi hủy đơn (`CANCELLED`): hệ thống tự động hoàn `stock_quantity` nguyên tử cùng hoàn hạn mức & số dư sandbox.
+
+### 10.2. RBAC 4 Vai trò (`admin`, `staff`, `parent`, `student`)
+- `UserResource` trả thêm `effective_role` (`admin|staff|parent|student`, quy đổi legacy `customer → parent`) và `can_manage_canteen` (`bool`).
+- Tài khoản `student` (`students.student_user_id = user.id`): xem thẻ, hạn mức, lịch sử hạn mức/đơn hàng của chính mình và đặt mua trong hạn mức; bị chặn `403` (`error_code: "PARENT_ROLE_REQUIRED"`) khi gọi các endpoint tài chính phụ huynh (`POST /cards/{id}/bank-links`, `verify-otp`, `resend-otp`, `unlink/*`, `PUT /cards/{id}/spending-limit`).
+
+### 10.3. Admin Blade POS Terminal, Quản lý Tồn kho & CRUD Học sinh
+- **POS Staff Terminal (`role:staff,admin`):**
+  - `GET /admin/pos` — Màn hình POS 2 cột.
+  - `GET /admin/pos/lookup-card?q=<card_or_student_code>` — Tra cứu thẻ JSON (không lộ STK/CCCD đầy đủ).
+  - `POST /admin/pos/checkout` — Tạo đơn POS `#POS-...` (`STUDENT_CARD_POS` hoặc `COUNTER_CASH`, bắt buộc `idempotency_key`).
+  - `GET /admin/pos/receipt/{order}` — Biên lai POS thân thiện máy in (`@media print`).
+- **Tồn kho (`role:admin`):** `PATCH /admin/products/{product}/stock` (`mode: set|add|unlimited`).
+- **Học sinh & Cấp phát Thẻ:**
+  - `GET /admin/canteen/students` (`role:staff,admin`).
+  - `GET/POST /admin/canteen/students/create`, `GET/PUT/DELETE /admin/canteen/students/{student}`, `POST /admin/canteen/students/{student}/cards` (`role:admin` only).

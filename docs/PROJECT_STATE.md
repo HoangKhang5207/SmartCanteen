@@ -137,10 +137,23 @@
 ## Trục 3 · Slice P2 — `SandboxBankingGateway`, `VNPay Sandbox`, Sổ cái `payment_transactions`, Webhook HMAC-SHA256 & Đối soát Ngân hàng
 
 - **Mã tác vụ:** `CANTEEN-P2-SANDBOX-VNPAY-RECONCILIATION`
-- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge cục bộ vào `main` trên cả 3 repo)
+- **Trạng thái:** `MERGED_TO_MAIN` (`root @ 120e480`, `api @ 3ab9af5`, `miniapp @ 7a2d4e5`)
 - **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-p2-sandbox-banking-vnpay-reconciliation-design.md` (`APPROVED 2026-11-25`)
 - **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-p2-sandbox-vnpay-reconciliation.md`
 - **Nhánh hiện tại:** `feat/p2-sandbox-vnpay-reconciliation` trên cả 3 repository (`root`, `api/`, `miniapp/`)
 - **Phạm vi đã hiện thực hóa:**
   - [x] Backend `api/`: 4 migrations additive (`sandbox_bank_accounts`, `payment_transactions`, `reconciliation_batches`/`items`, `gateway_webhook_events`), `SandboxBankingGateway`, `PaymentLedgerService`, `BankingWebhookController` (HMAC-SHA256 + anti-replay), `VnpayGatewayService` & `VnpayPaymentController` (HMAC-SHA512 + IPN idempotent), `ReconciliationService` + CLI `canteen:reconcile`, Admin Blade `/admin/canteen/reconciliation` + khung Sandbox Account trên chi tiết thẻ, + 4 test suites mới & Slice P1 Minor SMS rollback test.
   - [x] Frontend `miniapp/`: phương thức **Thanh toán VNPay (Sandbox)** trên `CartPage`, nút mở cổng VNPay & badge `FAILED`/`PENDING_RECONCILE` trên `OrderDetailPage`, unit test `payment.test.ts`, + Slice P1 Minor `VITE_DEMO_PHONE_LOGIN`.
+
+---
+
+## Trục 3 · Slice P3 — POS Quầy Căn tin (Staff), Quản lý Tồn kho (`stock_quantity`), CRUD Học sinh & RBAC 4 Vai trò
+
+- **Mã tác vụ:** `CANTEEN-P3-POS-INVENTORY-STUDENTS-RBAC`
+- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge cục bộ vào `main` trên cả 3 repo)
+- **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-p3-pos-inventory-students-rbac-design.md` (`APPROVED 2026-11-25`)
+- **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-p3-pos-inventory-students-rbac.md`
+- **Nhánh hiện tại:** `feat/p3-pos-inventory-students-rbac` trên cả 3 repository (`root`, `api/`, `miniapp/`)
+- **Phạm vi đã hiện thực hóa:**
+  - [x] Backend `api/`: 2 migrations additive (`products.stock_quantity`/`low_stock_threshold`, `students.student_user_id`), `InsufficientStockException` & trừ/hoàn kho nguyên tử trong `OrderService` theo đúng thứ tự khóa chuẩn, `PosTerminalController` + Blade `/admin/pos` & biên lai in, `StudentManagementController` + Blade `/admin/canteen/students` & cấp phát thẻ, nhập kho nhanh `/admin/products/{product}/stock`, RBAC 4 vai trò (`admin`/`staff`/`parent`/`student`, tương thích ngược `customer`), `StudentCardSeeder` có sẵn tài khoản Học sinh demo `0901234568`, + P2 Minor `gateway_txn_ref` cho `TIMEOUT`, + 4 bộ test mới (`ProductInventoryTest`, `StaffPosTerminalTest`, `AdminStudentCrudTest`, `FourRoleRbacTest`).
+  - [x] Frontend `miniapp/`: hiển thị & giới hạn số lượng theo tồn kho ở `MenuPage`/`ProductDetailPage`/`CartPage`, chế độ Học sinh chỉ-xem trên `CanteenHubPage` + nút SĐT demo học sinh `0901234568`, + 2 P2 Minors (badge trạng thái thanh toán trên `OrdersPage` & điều hướng phím mũi tên WAI-ARIA cho `role="radiogroup"` trên `CartPage`).
