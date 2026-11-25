@@ -251,3 +251,12 @@ Chạy lệnh `php artisan migrate --seed` sẽ thực thi 3 Seeder idempotent (
 | **`reconciliation_batches`** | `2026_11_25_400003_create_reconciliation_tables.php` | Đợt đối soát idempotent theo ngày (`UNIQUE (reconciliation_date, provider)`): tổng hợp `status` (`COMPLETED`/`HAS_DISCREPANCIES`), `total_local_count`, `total_provider_count`, `matched_count`, `discrepancy_count`, `total_local_amount`, `total_provider_amount`, `run_by`, `completed_at`. |
 | **`reconciliation_items`** | `2026_11_25_400003_create_reconciliation_tables.php` | Từng dòng đối chiếu thuộc `reconciliation_batches` (`batch_id` FK `cascadeOnDelete`, `payment_transaction_id` nullable FK `restrictOnDelete`): phân loại `MATCHED`, `AMOUNT_MISMATCH`, `MISSING_LOCAL`, `MISSING_IN_BANK`, `STATUS_MISMATCH`, lưu nguyên vẹn mô tả lệch (`note`) tách biệt khỏi `resolution_note`, `resolved_at`, `resolved_by`. |
 | **`gateway_webhook_events`** | `2026_11_25_400004_create_gateway_webhook_events_table.php` | Chống phát lại (anti-replay) cho Webhook ngân hàng Sandbox (`UNIQUE (provider, event_id)`), lưu `event_type`, `signature_valid`, `payload_hash` (SHA-256, không lưu raw PII), `processed_at`. |
+
+---
+
+## 6. Bảng Mở rộng Tồn kho & RBAC 4 Vai trò (Trục 3 · Slice P3)
+
+| Bảng | Migration | Mục đích & Ràng buộc chính |
+|---|---|---|
+| **`products` (mở rộng Slice P3)** | `2026_11_25_500001_add_inventory_columns_to_products_table.php` | Thêm `stock_quantity` (`unsignedInteger`, nullable — `null` = không giới hạn, `>= 0` = trừ kho nguyên tử chống oversell), `low_stock_threshold` (`unsignedInteger`, mặc định `5`) và chỉ mục `products_available_stock_idx (is_available, stock_quantity)`. |
+| **`students` (mở rộng Slice P3)** | `2026_11_25_500002_add_student_user_id_to_students_table.php` | Thêm `student_user_id` (`nullable`, `UNIQUE` FK → `users.id` `nullOnDelete`) để liên kết 1-1 tài khoản Học sinh (`role = student`) bên cạnh phụ huynh giám hộ (`user_id`, quan hệ 1-N). |
