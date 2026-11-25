@@ -348,3 +348,28 @@
 - **Request Body:** `{ "items": [{ "product_id": 1, "quantity": 1 }], "store_name": "THCS Trần Phú" }`
 - **Response `201 Created` / `200 OK` (replay):** `{ "data": OrderResource }` với mã `POS-YYMMDD-XXXXXX`, `status = COMPLETED`, `payment_method = STUDENT_CARD_POS`, `payment_status = PAID`, `remaining_limit_snapshot`.
 - **Mở rộng `POST /api/v1/orders` & `OrderResource`:** Nhận tùy chọn `student_card_id` & `payment_method` (`COUNTER_CASH` | `STUDENT_CARD`), tự động hoàn hạn mức và chuyển `payment_status = REFUNDED` khi Staff/Admin hủy đơn thanh toán bằng thẻ trong ngày.
+
+---
+
+## 7. Hủy Liên kết Ngân hàng qua OTP & Quản trị Blade Căn tin Số (Trục 2 · Slice D3)
+
+### 7.1. Khởi tạo yêu cầu hủy liên kết ngân hàng (`UNLINK-01..04`, `OTP-08`)
+- **Endpoint:** `POST /api/v1/canteen/bank-links/{bankLinkId}/unlink/initiate` (`auth:sanctum`, `throttle:10,1`)
+- **Quy tắc:** Chỉ chủ thẻ có `bank_links.status = ACTIVE` mới được khởi tạo (cho phép hủy liên kết kể cả khi thẻ đang `LOCKED`). Vô hiệu hóa các OTP `BANK_UNLINK` cũ chưa xác thực và phát hành mã OTP 6 chữ số mới (`purpose = BANK_UNLINK`).
+- **Response `201 Created`:** Trả `bank_link_id`, `student_card_id`, `purpose: "BANK_UNLINK"`, `phone_masked`, `account_number_masked`, và metadata OTP (`debug_otp` chỉ trả khi `local`/`testing` + `BANKING_EXPOSE_DEBUG_OTP=true`).
+- **Lỗi chuẩn:** `404`, `409 Conflict` (`BANK_LINK_NOT_ACTIVE`), `429`.
+
+### 7.2. Xác thực OTP hủy liên kết (`UNLINK-05..07`, `OTP-08`)
+- **Endpoint:** `POST /api/v1/canteen/bank-links/{bankLinkId}/unlink/verify-otp` (`auth:sanctum`, `throttle:10,1`)
+- **Request Body:** `{ "otp_code": "123456" }`
+- **Response `200 OK`:** `{ "data": StudentCardResource }` với `is_bank_linked: false`, `bank_link: null`, vẫn bảo toàn `spending_limit` (kể cả `spent_today` trong ngày).
+- **An toàn khóa phiên:** Nhập sai quá số lần cho phép trả `429` (`OTP_MAX_ATTEMPTS_EXCEEDED`) và vô hiệu hóa phiên OTP hủy đó, **không** phá hỏng `bank_links.status = ACTIVE`.
+
+### 7.3. Gửi lại mã OTP hủy liên kết
+- **Endpoint:** `POST /api/v1/canteen/bank-links/{bankLinkId}/unlink/resend-otp` (`auth:sanctum`, `throttle:10,1`)
+- **Response `200 OK`:** Cấp mã OTP `BANK_UNLINK` mới (áp dụng cooldown `30s`, tối đa `3` lần, chặn nếu phiên đã khóa do nhập sai).
+
+### 7.4. Tuyến Quản trị Blade Căn tin Số (`/admin/canteen/...`, session `auth`)
+- `GET /admin/canteen/cards` & `GET /admin/canteen/cards/{studentCard}` (`role:staff,admin`): Xem, tìm kiếm, lọc và kiểm tra chi tiết thẻ học sinh, lịch sử liên kết (chỉ hiển thị dữ liệu che mờ), hạn mức hôm nay và đơn hàng gắn thẻ.
+- `PATCH /admin/canteen/cards/{studentCard}/status` (`role:admin`): Chuyển trạng thái `ACTIVE ↔ LOCKED` hoặc thu hồi vĩnh viễn `REVOKED` (tự động ngắt `UNLINKED` ngân hàng trong cùng transaction).
+- `PUT /admin/canteen/cards/{studentCard}/spending-limit` (`role:admin`): Điều chỉnh hạn mức hằng ngày kèm audit log `changed_by = admin.id`.

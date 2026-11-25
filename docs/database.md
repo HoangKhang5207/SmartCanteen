@@ -53,12 +53,19 @@ erDiagram
     ORDERS {
         bigint id PK
         bigint user_id FK "restrictOnDelete"
-        varchar code UK "SC-YYMMDD-XXXXXX"
+        bigint student_card_id FK "nullable, restrictOnDelete"
+        varchar code UK "SC-YYMMDD-XXXXXX | POS-YYMMDD-XXXXXX"
         varchar status "PENDING | PREPARING | READY | COMPLETED | CANCELLED"
+        varchar payment_method "COUNTER_CASH | STUDENT_CARD | STUDENT_CARD_POS"
+        varchar payment_status "UNPAID | PAID | REFUNDED"
+        varchar store_name "nullable (<= 150 ký tự)"
+        integer discount_amount "Giảm giá (VND, default 0)"
         integer total_amount "Tổng tiền chốt phía server (VND)"
+        integer remaining_limit_snapshot "nullable (VND còn lại sau giao dịch)"
+        varchar payment_reference "nullable (Mã tham chiếu trừ tiền)"
         varchar note "nullable (<= 500 ký tự)"
         varchar idempotency_key "Unique theo (user_id, idempotency_key)"
-        varchar payload_hash "SHA-256 của items + note"
+        varchar payload_hash "SHA-256 của items + note + payment"
         integer version "Optimistic locking (default 1)"
         timestamp created_at
         timestamp updated_at
@@ -142,7 +149,7 @@ Chạy lệnh `php artisan migrate --seed` sẽ thực thi 3 Seeder idempotent (
 
 ---
 
-## 4. Bảng Mở rộng Phân hệ Căn tin Số (Trục 2 · Slice D1)
+## 4. Bảng Mở rộng Phân hệ Căn tin Số (Trục 2 · Slice D1–D3)
 
 | Bảng | Migration | Mục đích & Ràng buộc bảo mật chính |
 |---|---|---|
