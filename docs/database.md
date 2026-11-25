@@ -237,3 +237,17 @@ Chạy lệnh `php artisan migrate --seed` sẽ thực thi 3 Seeder idempotent (
 | **`spending_limits`** | `2026_11_25_200001_create_spending_limits_table.php` | Cấu hình hạn mức chi tiêu hằng ngày (1-1 với `student_cards`): `daily_limit`, `spent_today`, `spent_date` (tự động reset hằng ngày theo `Asia/Ho_Chi_Minh`). |
 | **`spending_limit_logs`** | `2026_11_25_200002_create_spending_limit_logs_table.php` | Nhật ký kiểm toán các lần thay đổi hạn mức (`previous_limit`, `new_limit`, `changed_by`, `reason`). |
 | **`orders` (mở rộng)** | `2026_11_25_200003_add_canteen_payment_fields_to_orders_table.php` | Thêm `student_card_id` (nullable FK `restrictOnDelete`), `payment_method`, `payment_status`, `store_name`, `discount_amount`, `remaining_limit_snapshot`, `payment_reference`. |
+
+---
+
+## 5. Bảng & Ràng buộc Thanh toán Thực tế, Cổng Sandbox/VNPay & Đối soát (Trục 3 · Slice P1–P2)
+
+| Bảng | Migration | Mục đích & Ràng buộc bảo mật chính |
+|---|---|---|
+| **`users` (mở rộng Slice P1)** | `2026_11_25_300001_add_phone_to_users_table.php` | Thêm `phone` (`UNIQUE`, chuẩn nội địa Việt Nam `0xxxxxxxxx`, nullable cho tài khoản nội bộ), `phone_verified_at` cho xác thực Zalo Phone Number. |
+| **`otp_verifications` (mở rộng Slice P1)** | `2026_11_25_300002_add_sms_delivery_metadata_to_otp_verifications_table.php` | Thêm `delivery_provider`, `delivery_status`, `delivery_reference` ghi nhận kết quả gửi SMS OTP qua `SmsGatewayInterface`. |
+| **`sandbox_bank_accounts`** | `2026_11_25_400001_create_sandbox_bank_accounts_table.php` | Số dư ngân hàng mô phỏng & chế độ phản hồi (`NORMAL`, `INSUFFICIENT_FUNDS`, `BANK_DECLINED`, `GATEWAY_TIMEOUT`) liên kết theo `provider_reference` (`UNIQUE`), `bank_code`, `account_number_masked`, `balance` (`unsignedBigInteger`, mặc định `500000`). Khóa theo thứ tự chuẩn PostgreSQL sau `spending_limits`. |
+| **`payment_transactions`** | `2026_11_25_400002_create_payment_transactions_table.php` | Sổ cái giao dịch thanh toán bất biến (append-only): lưu mọi nỗ lực `CHARGE`/`REFUND` cho `PENDING`/`SUCCEEDED`/`FAILED`/`TIMEOUT` với `order_id` (nullable FK `restrictOnDelete`), `student_card_id`, `bank_link_id`, `user_id`, `provider` (`sandbox_epay`/`mock_epay`/`vnpay`), `amount`, `failure_code`, `failure_message`, `idempotency_key`, `provider_reference`, `gateway_txn_ref` (`UNIQUE`), `response_meta` (`jsonb`), `processed_at`. Giao dịch `FAILED`/`TIMEOUT` được ghi bền vững **ngoài** `DB::transaction()` sau khi đơn hàng rollback. |
+| **`reconciliation_batches`** | `2026_11_25_400003_create_reconciliation_tables.php` | Đợt đối soát idempotent theo ngày (`UNIQUE (reconciliation_date, provider)`): tổng hợp `status` (`COMPLETED`/`HAS_DISCREPANCIES`), `total_local_count`, `total_provider_count`, `matched_count`, `discrepancy_count`, `total_local_amount`, `total_provider_amount`, `run_by`, `completed_at`. |
+| **`reconciliation_items`** | `2026_11_25_400003_create_reconciliation_tables.php` | Từng dòng đối chiếu thuộc `reconciliation_batches` (`batch_id` FK `cascadeOnDelete`, `payment_transaction_id` nullable FK `restrictOnDelete`): phân loại `MATCHED`, `AMOUNT_MISMATCH`, `MISSING_LOCAL`, `MISSING_IN_BANK`, `STATUS_MISMATCH`, lưu nguyên vẹn mô tả lệch (`note`) tách biệt khỏi `resolution_note`, `resolved_at`, `resolved_by`. |
+| **`gateway_webhook_events`** | `2026_11_25_400004_create_gateway_webhook_events_table.php` | Chống phát lại (anti-replay) cho Webhook ngân hàng Sandbox (`UNIQUE (provider, event_id)`), lưu `event_type`, `signature_valid`, `payload_hash` (SHA-256, không lưu raw PII), `processed_at`. |
