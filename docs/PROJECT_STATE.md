@@ -74,15 +74,15 @@
   - `compose.yaml` & `compose.prod.yaml` của cả 2 sub-repo PASS `docker compose config --quiet`; cả 2 workflow CI PASS YAML parser.
 - **Lộ trình tiếp theo (Trục 2 — Phân hệ Căn tin Số theo `FEATURES.md`, phương án `3A`):**
   - Slice D1: **COMPLETED_VERIFIED & Đã merge vào `main` (`4c76e83` / `fa9418a` / `01c8db3`)**.
-  - Slice D2: **ĐANG TRIỂN KHAI** (xem mục bên dưới).
-  - Slice D3: Hủy liên kết ngân hàng + OTP (`UNLINK-01..07`) + Quản trị Admin Blade + Kiểm thử E2E.
+  - Slice D2: **COMPLETED_VERIFIED & Đã merge vào `main` (`941014c` / `89d76d1` / `14a433b`)**.
+  - Slice D3: **COMPLETED_VERIFIED** (chờ người dùng duyệt merge/push trên từng repo).
 
 ---
 
 ## Trục 2 · Slice D1 — Hồ sơ Học sinh, Thẻ Thông minh & Liên kết Ngân hàng + OTP
 
 - **Mã tác vụ:** `CANTEEN-D1-CARD-BANK-OTP`
-- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge/push trên từng repo)
+- **Trạng thái:** `MERGED_TO_MAIN` (`root @ 4c76e83`, `api @ fa9418a`, `miniapp @ 01c8db3`)
 - **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-d1-student-card-bank-link-design.md` (APPROVED 2026-11-25)
 - **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-d1-student-card-bank-link.md`
 - **Nhánh hiện tại:** `feat/d1-student-card-bank-link` trên cả 3 repository (`root`, `api/`, `miniapp/`)
@@ -96,10 +96,24 @@
 ## Trục 2 · Slice D2 — Hạn mức Chi tiêu Hằng ngày, Lịch sử Hạn mức, Thanh toán Trừ Hạn mức & Chi tiết Đơn Gắn Thẻ
 
 - **Mã tác vụ:** `CANTEEN-D2-LIMIT-PAYMENT-ORDERS`
-- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge/push trên từng repo)
+- **Trạng thái:** `MERGED_TO_MAIN` (`root @ 941014c`, `api @ 89d76d1`, `miniapp @ 14a433b`)
 - **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-d2-spending-limit-orders-design.md` (APPROVED 2026-11-25)
 - **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-d2-spending-limit-orders.md`
 - **Nhánh hiện tại:** `feat/d2-spending-limit-orders` trên cả 3 repository (`root`, `api/`, `miniapp/`)
 - **Phạm vi đã hiện thực hóa:**
   - [x] Backend `api/`: 3 migrations additive (`spending_limits`, `spending_limit_logs`, mở rộng `orders`), `PaymentMethod`/`PaymentStatus`, `SpendingLimitService` (lazy daily reset `Asia/Ho_Chi_Minh`), mở rộng `OrderService` (`createOrder` hỗ trợ thẻ học sinh, `createPosPurchase` `#POS-...`, `transitionStatus` tự hoàn hạn mức theo thứ tự khóa chuẩn `student_cards → spending_limits → orders`), 4 endpoints mới `/api/v1/canteen/cards/{cardId}/{spending-limit,limit-logs,orders,pos-purchases}`, + xử lý Slice D1 Backend Minors.
   - [x] Frontend `miniapp/`: `SpendingLimitSheet` (`20k/30k/50k/100k` + tùy chỉnh), `LimitHistoryPage` & `CartPage` đồng bộ `selectedCardIdAtom` đa thẻ, nâng cấp `CanteenHubPage` (hạn mức + đơn hàng gần đây + mô phỏng quẹt thẻ POS), `OrderDetailPage` (đủ 14 trường `DETAIL-01..14`), + xử lý Slice D1 Frontend A11y Minors.
+
+---
+
+## Trục 2 · Slice D3 — Hủy Liên kết Ngân hàng qua OTP, Quản trị Blade Căn tin Số, 7 Deferred Minors & E2E 4 Luồng
+
+- **Mã tác vụ:** `CANTEEN-D3-UNLINK-ADMIN-E2E`
+- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge/push trên từng repo)
+- **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-d3-unlink-admin-e2e-design.md` (APPROVED 2026-11-25)
+- **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-d3-unlink-admin-e2e.md`
+- **Nhánh hiện tại:** `feat/d3-unlink-admin-e2e` trên cả 3 repository (`root`, `api/`, `miniapp/`)
+- **Phạm vi đã hiện thực hóa:**
+  - [x] Backend `api/`: 3 endpoints hủy liên kết OTP `/api/v1/canteen/bank-links/{id}/unlink/{initiate,verify-otp,resend-otp}` (`throttle:10,1`, canonical lock `student_cards → bank_links → otp_verifications`), Quản trị Blade Căn tin số (`/admin/canteen/cards`, `/admin/canteen/cards/{card}`, chuyển trạng thái thẻ, điều chỉnh hạn mức Admin, nâng cấp Dashboard & Orders Blade), 3 Deferred Minors Backend, + 3 test suites mới (`BankUnlinkOtpTest`, `AdminCanteenManagementTest`, `DigitalCanteenEndToEndFlowsTest`).
+  - [x] Frontend `miniapp/`: `UnlinkConfirmDialog`, `BankUnlinkOtpPage` (`/canteen/unlink-otp`) kèm màn hình xác nhận Hủy liên kết thành công (Screen #15), nâng cấp `CanteenHubPage`, + 3 Deferred Minors Frontend (A11y, focus restore, `Asia/Ho_Chi_Minh` timezone).
+  - [x] Tài liệu `docs/`: cập nhật `api-contract.md`, `database.md` (Minor #7 ERD & tiêu đề), `PROJECT_STATE.md`.
