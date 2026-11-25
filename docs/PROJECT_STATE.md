@@ -82,10 +82,11 @@
 ## Trục 2 · Slice D1 — Hồ sơ Học sinh, Thẻ Thông minh & Liên kết Ngân hàng + OTP
 
 - **Mã tác vụ:** `CANTEEN-D1-CARD-BANK-OTP`
-- **Trạng thái:** `IN_PROGRESS` (đang hoàn tất kiểm chứng cuối & Code Review)
+- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge/push trên từng repo)
 - **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-d1-student-card-bank-link-design.md` (APPROVED 2026-11-25)
 - **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-d1-student-card-bank-link.md`
 - **Nhánh hiện tại:** `feat/d1-student-card-bank-link` trên cả 3 repository (`root`, `api/`, `miniapp/`)
 - **Phạm vi đã hiện thực hóa:**
   - [x] Backend `api/`: 4 migrations PostgreSQL (kèm Partial Unique Index `WHERE status = 'ACTIVE'`), 3 Enums, 4 Models (`encrypted` cast cho STK/CCCD), `StudentCardSeeder`, `BankingGatewayInterface` + `MockEpayBankingGateway`, `DataMaskingService`, `StudentCardService`, `BankLinkingService`, 6 REST endpoints `/api/v1/canteen/*`.
   - [x] Frontend `miniapp/`: Mở rộng `BottomNav` thành 4 tab, bổ sung `StudentCardView`, `OtpCodeInput`, 3 trang `/canteen`, `/canteen/link-bank`, `/canteen/verify-otp` kèm Jotai in-memory draft & validation.
+  - [x] Khắc phục 100% các điểm Critical & Important từ Code Review độc lập (chặn lách lockout qua `resend-otp`, sửa chỉnh chữ số giữa `OtpCodeInput`, chuẩn hóa thứ tự khóa `student_cards → bank_links → otp_verifications`, đưa `catch (UniqueConstraintViolationException)` ra ngoài `DB::transaction()`, wall-clock countdown & double-submit guards).
