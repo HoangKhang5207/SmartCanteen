@@ -260,3 +260,11 @@ Chạy lệnh `php artisan migrate --seed` sẽ thực thi 3 Seeder idempotent (
 |---|---|---|
 | **`products` (mở rộng Slice P3)** | `2026_11_25_500001_add_inventory_columns_to_products_table.php` | Thêm `stock_quantity` (`unsignedInteger`, nullable — `null` = không giới hạn, `>= 0` = trừ kho nguyên tử chống oversell), `low_stock_threshold` (`unsignedInteger`, mặc định `5`) và chỉ mục `products_available_stock_idx (is_available, stock_quantity)`. |
 | **`students` (mở rộng Slice P3)** | `2026_11_25_500002_add_student_user_id_to_students_table.php` | Thêm `student_user_id` (`nullable`, `UNIQUE` FK → `users.id` `nullOnDelete`) để liên kết 1-1 tài khoản Học sinh (`role = student`) bên cạnh phụ huynh giám hộ (`user_id`, quan hệ 1-N). |
+
+---
+
+## 7. Bảng Thông báo Giao dịch & Push Zalo OA/ZNS (Trục 3 · Slice P4)
+
+| Bảng | Migration | Mục đích & Ràng buộc chính |
+|---|---|---|
+| **`canteen_notifications`** | `2026_11_26_600001_create_canteen_notifications_table.php` | Lưu thông báo In-App và trạng thái push (`user_id` FK `cascadeOnDelete`, `type`, `severity`, `title`, `body`, `action_url` nội bộ an toàn, `meta` `jsonb` đã lọc PII, `push_channel`, `push_status`, `push_reference`, `read_at`). Chỉ mục tối ưu `(user_id, read_at, id)` và `(user_id, type, created_at)`. |
