@@ -1,7 +1,7 @@
 # Phân tích Khoảng trống (Gap Analysis) & Lộ trình Kiến trúc Trục 3 — Nâng cấp Smart Canteen Chuẩn Production-Ready
 
 - **Ngày lập:** 2026-11-25
-- **Trạng thái:** `PROPOSED_FOR_APPROVAL`
+- **Trạng thái:** `APPROVED (2026-11-25)` — Chốt: `SmsGatewayInterface` (`log` + `esms` + `twilio`), `SandboxBankingGateway + VNPay Sandbox`, lộ trình `P1 → P2 → P3 → P4`.
 - **Nền tảng hiện tại trên `main`:**
   - Trục 1 (Sub-repos + Docker + CI) + Trục 2 · Slice D1–D3 (`root @ fc93101`, `api @ c9caf98`, `miniapp @ b73ce24`) + bản đánh bóng `chore/d3-minor-polish`.
 - **Nguồn đối chiếu:** `FEATURES.md` (Mục 7 — 16 nghiệp vụ Production-Ready & Mục 9 — 10 module Căn tin số), `AGENTS.md`, source code thực tế tại `api/` và `miniapp/`.

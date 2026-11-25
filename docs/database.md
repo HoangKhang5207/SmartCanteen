@@ -34,6 +34,8 @@ erDiagram
         varchar password "nullable (bcrypt)"
         varchar role "customer | staff | admin"
         varchar zalo_user_id UK "nullable (ID định danh Zalo)"
+        varchar phone UK "nullable (SĐT VN chuẩn hóa 0xxxxxxxxx)"
+        timestamp phone_verified_at "nullable"
         timestamp created_at
         timestamp updated_at
     }
@@ -138,6 +140,9 @@ erDiagram
         bigint user_id FK "cascadeOnDelete"
         bigint bank_link_id FK "cascadeOnDelete"
         varchar purpose "BANK_LINK | BANK_UNLINK"
+        varchar delivery_provider "log | esms | twilio"
+        varchar delivery_status "SIMULATED | SENT | FAILED"
+        varchar delivery_reference "nullable"
         varchar code_hash "bcrypt"
         smallint attempts
         smallint resend_count

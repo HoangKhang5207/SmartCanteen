@@ -373,3 +373,26 @@
 - `GET /admin/canteen/cards` & `GET /admin/canteen/cards/{studentCard}` (`role:staff,admin`): Xem, tìm kiếm, lọc và kiểm tra chi tiết thẻ học sinh, lịch sử liên kết (chỉ hiển thị dữ liệu che mờ), hạn mức hôm nay và đơn hàng gắn thẻ.
 - `PATCH /admin/canteen/cards/{studentCard}/status` (`role:admin`): Chuyển trạng thái `ACTIVE ↔ LOCKED` hoặc thu hồi vĩnh viễn `REVOKED` (tự động ngắt `UNLINKED` ngân hàng trong cùng transaction).
 - `PUT /admin/canteen/cards/{studentCard}/spending-limit` (`role:admin`): Điều chỉnh hạn mức hằng ngày kèm audit log `changed_by = admin.id`.
+
+---
+
+## 8. Xác thực bằng SĐT Zalo (Lazy Auth) & Cổng SMS OTP (Trục 3 · Slice P1)
+
+### 8.1. Đăng nhập bằng Số điện thoại Zalo (`POST /api/v1/auth/zalo-phone`)
+- **Middleware:** `throttle:20,1` (Công khai, không yêu cầu token trước)
+- **Request Body:** `{ "access_token": "...", "phone_token": "...", "name": "tùy chọn" }` (server chỉ tin cậy `zalo_user_id` được xác minh từ `access_token`, không nhận `zalo_user_id` từ client)
+- **Cơ chế:** Server đổi `phone_token` (từ `zmp-sdk getPhoneNumber()`) qua `https://graph.zalo.me/v2.0/me/info` bằng `ZALO_APP_SECRET`, chuẩn hóa SĐT VN (`0xxxxxxxxx`), đối khớp/tạo `User` trong transaction (giữ nguyên role `staff`/`admin` nếu đã có; trả `409 ACCOUNT_CONFLICT` nếu `zalo_user_id` gắn SĐT khác).
+- **Response `200 OK`:** `{ "data": { "token": "<sanctum_token>", "user": { "id", "name", "role", "zalo_user_id", "phone", "phone_masked", "has_verified_phone" } } }`.
+- **Lỗi chuẩn:** `401` (`ZALO_PHONE_TOKEN_INVALID`), `409` (`ACCOUNT_CONFLICT`), `422` (`INVALID_PHONE_NUMBER`), `503` (`ZALO_CONFIG_MISSING` / `ZALO_UNAVAILABLE`).
+
+### 8.2. Đăng nhập SĐT Demo cho Local/Dev/Testing (`POST /api/v1/auth/demo-phone`)
+- **Middleware:** `throttle:20,1` — chỉ hoạt động khi `APP_ENV in [local, testing]` và `DEMO_LOGIN_ENABLED=true` (trả `403` trong mọi trường hợp khác).
+- **Request Body:** `{ "phone_number": "0901234567", "name": "tùy chọn" }`.
+
+### 8.3. Đăng xuất (`POST /api/v1/auth/logout`, `auth:sanctum`)
+- Thu hồi Sanctum personal access token hiện tại và trả `200 OK`.
+
+### 8.4. Cổng gửi SMS OTP (`SmsGatewayInterface`)
+- Tích hợp trên 4 điểm phát hành OTP (`bank-links`, `resend-otp`, `unlink/initiate`, `unlink/resend-otp`), điều khiển qua `SMS_DRIVER=log|esms|twilio`.
+- Response `data.otp` bổ sung `delivery_channel: "SMS"` và `delivery_provider`.
+- Nếu cổng SMS thất bại: rollback toàn bộ transaction và trả `503 Service Unavailable` (`error_code: "SMS_DELIVERY_FAILED"`).

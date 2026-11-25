@@ -109,7 +109,7 @@
 ## Trục 2 · Slice D3 — Hủy Liên kết Ngân hàng qua OTP, Quản trị Blade Căn tin Số, 7 Deferred Minors & E2E 4 Luồng
 
 - **Mã tác vụ:** `CANTEEN-D3-UNLINK-ADMIN-E2E`
-- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge/push trên từng repo)
+- **Trạng thái:** `MERGED_TO_MAIN` (`root @ fc93101`, `api @ c9caf98`, `miniapp @ b73ce24`; Minor Polish merged `9549812` / `22046ee` / `ca2e40d`)
 - **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-d3-unlink-admin-e2e-design.md` (APPROVED 2026-11-25)
 - **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-d3-unlink-admin-e2e.md`
 - **Nhánh hiện tại:** `feat/d3-unlink-admin-e2e` trên cả 3 repository (`root`, `api/`, `miniapp/`)
@@ -117,3 +117,17 @@
   - [x] Backend `api/`: 3 endpoints hủy liên kết OTP `/api/v1/canteen/bank-links/{id}/unlink/{initiate,verify-otp,resend-otp}` (`throttle:10,1`, canonical lock `student_cards → bank_links → otp_verifications`), Quản trị Blade Căn tin số (`/admin/canteen/cards`, `/admin/canteen/cards/{card}`, chuyển trạng thái thẻ, điều chỉnh hạn mức Admin, nâng cấp Dashboard & Orders Blade), 3 Deferred Minors Backend, + 3 test suites mới (`BankUnlinkOtpTest`, `AdminCanteenManagementTest`, `DigitalCanteenEndToEndFlowsTest`).
   - [x] Frontend `miniapp/`: `UnlinkConfirmDialog`, `BankUnlinkOtpPage` (`/canteen/unlink-otp`) kèm màn hình xác nhận Hủy liên kết thành công (Screen #15), nâng cấp `CanteenHubPage`, + 3 Deferred Minors Frontend (A11y, focus restore, `Asia/Ho_Chi_Minh` timezone).
   - [x] Tài liệu `docs/`: cập nhật `api-contract.md`, `database.md` (Minor #7 ERD & tiêu đề), `PROJECT_STATE.md`.
+
+---
+
+## Trục 3 · Slice P1 — Xác thực SĐT Zalo (Lazy Auth) & Cổng SMS OTP Thực tế
+
+- **Mã tác vụ:** `CANTEEN-P1-ZALO-PHONE-SMS-OTP`
+- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge/push trên từng repo)
+- **Lộ trình Trục 3:** `docs/superpowers/specs/2026-11-25-truc3-production-readiness-roadmap.md` (`APPROVED 2026-11-25`)
+- **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-p1-zalo-phone-auth-sms-otp-design.md` (`APPROVED 2026-11-25`)
+- **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-p1-zalo-phone-auth-sms-otp.md`
+- **Nhánh hiện tại:** `feat/p1-zalo-phone-auth-sms-otp` trên cả 3 repository (`root`, `api/`, `miniapp/`)
+- **Phạm vi đã hiện thực hóa:**
+  - [x] Backend `api/`: 2 migrations additive (`users.phone` + `phone_verified_at`, `otp_verifications.delivery_*`), `PhoneNormalizer`, `ZaloIdentityService::resolvePhoneNumber()`, 3 endpoints `/api/v1/auth/{zalo-phone,demo-phone,logout}`, `SmsGatewayInterface` với 3 driver (`log`, `esms`, `twilio`), tích hợp rollback sạch vào `BankLinkingService`, + 2 test suites mới (`ZaloPhoneAuthTest`, `SmsOtpGatewayTest`).
+  - [x] Frontend `miniapp/`: Kiến trúc **Lazy Auth** (Thực đơn/Chi tiết/Giỏ hàng Public 100%; Căn tin/Đơn hàng/Đặt đơn yêu cầu xác thực SĐT Zalo), `ZaloPhoneLoginPanel` & `ZaloPhoneLoginModal`, auto-fill SĐT phụ huynh ở `BankLinkFormPage`, nút Đăng xuất ở `CanteenHubPage`, + unit test `phone.test.ts`.
