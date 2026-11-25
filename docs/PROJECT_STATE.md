@@ -73,6 +73,20 @@
   - `miniapp/`: `npm test` PASS (5 files, 18 tests), `npx tsc --noEmit` PASS, `npm run build` PASS, `npm audit --omit=dev --audit-level=high` 0 lỗ hổng, Docker production image non-root UID `101`, `/healthz` trả `ok`, `/` trả `200`.
   - `compose.yaml` & `compose.prod.yaml` của cả 2 sub-repo PASS `docker compose config --quiet`; cả 2 workflow CI PASS YAML parser.
 - **Lộ trình tiếp theo (Trục 2 — Phân hệ Căn tin Số theo `FEATURES.md`, phương án `3A`):**
-  - Slice D1: Hồ sơ Học sinh, Thẻ học sinh thông minh (`CARD-01..07`) & Liên kết ngân hàng + OTP 6 số (`BANK-01..16`, `OTP-01..08`).
+  - Slice D1: **ĐÃ TRIỂN KHAI** (xem mục bên dưới).
   - Slice D2: Hạn mức chi tiêu ngày + Lịch sử hạn mức (`LIMIT-01..13`) + Thanh toán trừ hạn mức & Chi tiết đơn gắn thẻ (`DETAIL-01..14`).
   - Slice D3: Hủy liên kết ngân hàng + OTP (`UNLINK-01..07`) + Quản trị Admin Blade + Kiểm thử E2E.
+
+---
+
+## Trục 2 · Slice D1 — Hồ sơ Học sinh, Thẻ Thông minh & Liên kết Ngân hàng + OTP
+
+- **Mã tác vụ:** `CANTEEN-D1-CARD-BANK-OTP`
+- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge/push trên từng repo)
+- **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-d1-student-card-bank-link-design.md` (APPROVED 2026-11-25)
+- **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-d1-student-card-bank-link.md`
+- **Nhánh hiện tại:** `feat/d1-student-card-bank-link` trên cả 3 repository (`root`, `api/`, `miniapp/`)
+- **Phạm vi đã hiện thực hóa:**
+  - [x] Backend `api/`: 4 migrations PostgreSQL (kèm Partial Unique Index `WHERE status = 'ACTIVE'`), 3 Enums, 4 Models (`encrypted` cast cho STK/CCCD), `StudentCardSeeder`, `BankingGatewayInterface` + `MockEpayBankingGateway`, `DataMaskingService`, `StudentCardService`, `BankLinkingService`, 6 REST endpoints `/api/v1/canteen/*`.
+  - [x] Frontend `miniapp/`: Mở rộng `BottomNav` thành 4 tab, bổ sung `StudentCardView`, `OtpCodeInput`, 3 trang `/canteen`, `/canteen/link-bank`, `/canteen/verify-otp` kèm Jotai in-memory draft & validation.
+  - [x] Khắc phục 100% các điểm Critical & Important từ Code Review độc lập (chặn lách lockout qua `resend-otp`, sửa chỉnh chữ số giữa `OtpCodeInput`, chuẩn hóa thứ tự khóa `student_cards → bank_links → otp_verifications`, đưa `catch (UniqueConstraintViolationException)` ra ngoài `DB::transaction()`, wall-clock countdown & double-submit guards).

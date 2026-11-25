@@ -300,3 +300,32 @@
   }
   ```
 - **Quy tắc:** `today_completed_revenue` chỉ cộng `total_amount` (số nguyên `VND`) của các đơn tạo trong ngày hôm nay có `status = COMPLETED`.
+
+---
+
+## 5. Phân hệ Căn tin Số — Thẻ Học sinh & Liên kết Ngân hàng + OTP (Trục 2 · Slice D1)
+
+### 5.1. Danh sách ngân hàng hỗ trợ trích nợ tự động
+- **Endpoint:** `GET /api/v1/canteen/banks` (Công khai)
+- **Response `200 OK`:** Danh sách các ngân hàng hỗ trợ (`MB`, `VCB`, `BIDV`, `TCB`, `CTG`, `ACB`, `VPB`) kèm `account_min_length`, `account_max_length`.
+
+### 5.2. Danh sách & chi tiết Thẻ học sinh thông minh (`CARD-01..07`)
+- **Endpoints:** `GET /api/v1/canteen/cards` và `GET /api/v1/canteen/cards/{cardId}` (`auth:sanctum`)
+- **Quy tắc bảo mật:** Chỉ trả thẻ gắn với tài khoản người dùng đang đăng nhập; truy cập `cardId` của người khác trả `404 Not Found`. Thông tin ngân hàng trong `bank_link` luôn ở dạng đã che (`account_number_masked`, `national_id_masked`, `phone_masked`).
+
+### 5.3. Khởi tạo liên kết tài khoản ngân hàng & cấp OTP 6 chữ số (`BANK-02..11`, `OTP-01`, `OTP-07`)
+- **Endpoint:** `POST /api/v1/canteen/cards/{cardId}/bank-links` (`auth:sanctum`)
+- **Validation:** `bank_code` hợp lệ, `account_number` chỉ gồm chữ số đúng độ dài ngân hàng, `account_holder_name` (`2..150`), `national_id` (`digits:12`), `phone_number` (`^0[35789]\d{8}$`), `email` (`nullable|email`), `agreed_terms` (`accepted`).
+- **Response:** `201 Created` trả `bank_link_id`, `phone_masked`, và metadata OTP (`expires_in_seconds: 180`, `resend_cooldown_seconds: 30`, `max_attempts: 5`, `max_resends: 3`). `debug_otp` chỉ trả khi `local`/`testing` + `BANKING_EXPOSE_DEBUG_OTP=true`.
+- **Lỗi:** `404` (thẻ người khác), `409 Conflict` (`CARD_ALREADY_LINKED`), `422` (validation hoặc thẻ bị khóa `LOCKED`).
+
+### 5.4. Xác thực OTP 6 chữ số (`OTP-02..05`, `BANK-12..15`)
+- **Endpoint:** `POST /api/v1/canteen/bank-links/{bankLinkId}/verify-otp` (`auth:sanctum`)
+- **Request Body:** `{ "otp_code": "123456" }`
+- **Response `200 OK`:** `{ "data": StudentCardResource }` với `is_bank_linked: true` và `bank_link.status = "ACTIVE"`.
+- **Lỗi chuẩn:** `404`, `409` (`BANK_LINK_ALREADY_ACTIVE` / `BANK_LINK_INVALID_STATE`), `422` (`OTP_INVALID` kèm `meta.remaining_attempts`, `OTP_EXPIRED`), `429` (`OTP_MAX_ATTEMPTS_EXCEEDED`).
+
+### 5.5. Gửi lại mã OTP (`OTP-01..07`)
+- **Endpoint:** `POST /api/v1/canteen/bank-links/{bankLinkId}/resend-otp` (`auth:sanctum`)
+- **Response `200 OK`:** Cấp mã OTP mới (vô hiệu hóa mã cũ), cập nhật `remaining_resends`.
+- **Lỗi chuẩn:** `404`, `409`, `429` (`OTP_RESEND_COOLDOWN` kèm `meta.retry_after_seconds`, hoặc `OTP_MAX_RESENDS_EXCEEDED`).

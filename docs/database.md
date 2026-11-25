@@ -137,3 +137,16 @@ Chạy lệnh `php artisan migrate --seed` sẽ thực thi 2 Seeder idempotent (
 2. **`StaffSeeder` (`api/database/seeders/StaffSeeder.php`):**
    - Tài khoản Admin: `admin@smartcanteen.local` / mật khẩu `Admin@123456` (`role = admin`).
    - Tài khoản Staff: `staff@smartcanteen.local` / mật khẩu `Staff@123456` (`role = staff`).
+3. **`StudentCardSeeder` (`api/database/seeders/StudentCardSeeder.php` — Trục 2 · Slice D1):**
+   - Khởi tạo học sinh mẫu cho tài khoản demo `demo_customer1`: trường `THCS Trần Phú`, học sinh `Titkul Student`, lớp `8A2`, thẻ thông minh `F156BA` (`ACTIVE`, chưa liên kết ngân hàng).
+
+---
+
+## 4. Bảng Mở rộng Phân hệ Căn tin Số (Trục 2 · Slice D1)
+
+| Bảng | Migration | Mục đích & Ràng buộc bảo mật chính |
+|---|---|---|
+| **`students`** | `2026_11_25_100001_create_students_table.php` | Hồ sơ học sinh gắn `user_id` (`restrictOnDelete`), `student_code` UNIQUE, tên trường, lớp học. |
+| **`student_cards`** | `2026_11_25_100002_create_student_cards_table.php` | Thẻ học sinh thông minh (`card_code` UNIQUE, `status`: `ACTIVE`/`LOCKED`/`REVOKED`). |
+| **`bank_links`** | `2026_11_25_100003_create_bank_links_table.php` | Liên kết ngân hàng & trích nợ tự động. Mã hóa AES-256 (`account_number_encrypted`, `national_id_encrypted`), lưu bản che (`account_number_masked`, `national_id_masked`, `phone_masked`). **Partial Unique Index PostgreSQL:** `bank_links_one_active_per_card_idx ON bank_links (student_card_id) WHERE status = 'ACTIVE'`. |
+| **`otp_verifications`** | `2026_11_25_100004_create_otp_verifications_table.php` | Xác thực OTP 6 chữ số cho `BANK_LINK` và `BANK_UNLINK`. Lưu `code_hash` (bcrypt, không lưu plaintext), theo dõi `attempts`/`max_attempts` (5), `resend_count`/`max_resends` (3), `last_sent_at`, `expires_at` (180s), `verified_at`, `invalidated_at`. |
