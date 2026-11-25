@@ -96,10 +96,10 @@
 ## Trục 2 · Slice D2 — Hạn mức Chi tiêu Hằng ngày, Lịch sử Hạn mức, Thanh toán Trừ Hạn mức & Chi tiết Đơn Gắn Thẻ
 
 - **Mã tác vụ:** `CANTEEN-D2-LIMIT-PAYMENT-ORDERS`
-- **Trạng thái:** `IN_PROGRESS` (đang chạy kiểm chứng cuối & Code Review)
+- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge/push trên từng repo)
 - **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-d2-spending-limit-orders-design.md` (APPROVED 2026-11-25)
 - **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-d2-spending-limit-orders.md`
 - **Nhánh hiện tại:** `feat/d2-spending-limit-orders` trên cả 3 repository (`root`, `api/`, `miniapp/`)
 - **Phạm vi đã hiện thực hóa:**
-  - [x] Backend `api/`: 3 migrations additive (`spending_limits`, `spending_limit_logs`, mở rộng `orders`), `PaymentMethod`/`PaymentStatus`, `SpendingLimitService` (lazy daily reset `Asia/Ho_Chi_Minh`), mở rộng `OrderService` (`createOrder` hỗ trợ thẻ học sinh, `createPosPurchase` `#POS-...`, `transitionStatus` tự hoàn hạn mức khi hủy đơn), 4 endpoints mới `/api/v1/canteen/cards/{cardId}/{spending-limit,limit-logs,orders,pos-purchases}`, + xử lý Slice D1 Backend Minors.
-  - [x] Frontend `miniapp/`: `SpendingLimitSheet` (`20k/30k/50k/100k` + tùy chỉnh), `LimitHistoryPage`, nâng cấp `CanteenHubPage` (hạn mức + đơn hàng gần đây + mô phỏng quẹt thẻ POS), `CartPage` (chọn thanh toán thẻ học sinh), `OrderDetailPage` (đủ 14 trường `DETAIL-01..14`), + xử lý Slice D1 Frontend A11y Minors.
+  - [x] Backend `api/`: 3 migrations additive (`spending_limits`, `spending_limit_logs`, mở rộng `orders`), `PaymentMethod`/`PaymentStatus`, `SpendingLimitService` (lazy daily reset `Asia/Ho_Chi_Minh`), mở rộng `OrderService` (`createOrder` hỗ trợ thẻ học sinh, `createPosPurchase` `#POS-...`, `transitionStatus` tự hoàn hạn mức theo thứ tự khóa chuẩn `student_cards → spending_limits → orders`), 4 endpoints mới `/api/v1/canteen/cards/{cardId}/{spending-limit,limit-logs,orders,pos-purchases}`, + xử lý Slice D1 Backend Minors.
+  - [x] Frontend `miniapp/`: `SpendingLimitSheet` (`20k/30k/50k/100k` + tùy chỉnh), `LimitHistoryPage` & `CartPage` đồng bộ `selectedCardIdAtom` đa thẻ, nâng cấp `CanteenHubPage` (hạn mức + đơn hàng gần đây + mô phỏng quẹt thẻ POS), `OrderDetailPage` (đủ 14 trường `DETAIL-01..14`), + xử lý Slice D1 Frontend A11y Minors.
