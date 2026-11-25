@@ -1,13 +1,18 @@
-# Smart Canteen — Zalo Mini App × React × Laravel 13
+# Smart Canteen — Workspace Hub (Zalo Mini App × React × Laravel 13)
 
-Ứng dụng đặt suất ăn & quản lý đơn hàng căn tin qua Zalo Mini App, kết nối tới Laravel 13 REST API + Cổng Quản trị Blade và cơ sở dữ liệu PostgreSQL độc lập (100% dữ liệu giả lập, không kết nối hệ thống Căn Tin Số production).
+Workspace điều phối tài liệu kiến trúc, đặc tả và kiểm thử cho hệ thống **Smart Canteen** gồm **2 sub-repository Git độc lập**:
 
-## Cấu trúc Monorepo & Hồ sơ Tài liệu Kỹ thuật
+- **`api/`** (Sub-repo độc lập): Laravel 13 REST API (`/api/v1`) + Cổng Quản trị Blade (`/admin`) + PostgreSQL 17 + Docker + GitHub Actions CI. Xem chi tiết tại `api/README.md`.
+- **`miniapp/`** (Sub-repo độc lập): Zalo Mini App (React 18 + TypeScript + ZaUI + Jotai + TanStack Query + Tailwind CSS) + Docker + GitHub Actions CI. Xem chi tiết tại `miniapp/README.md`.
+
+> **Lưu ý cấu trúc Git:** Từ phiên bản nâng cấp nền tảng (Trục 1), `api/` và `miniapp/` đã được tách thành 2 Git repository độc lập có bảo toàn trọn vẹn lịch sử commit S1–S5 của từng bên và được khai báo trong `.gitignore` của workspace cha. Workspace cha lưu giữ hồ sơ tài liệu dùng chung (`docs/`, `DESIGN.md`, `canteen_logo.jpg`).
+
+## Cấu trúc Workspace & Hồ sơ Tài liệu Kỹ thuật
 
 ```text
 .
-├── api/                                # Laravel 13 REST API + Admin Blade Portal (PHP 8.5 + Sanctum + PostgreSQL)
-├── miniapp/                            # Zalo Mini App (React 18 + TypeScript + ZaUI + Jotai + TanStack Query)
+├── api/                                # [Sub-repo Git độc lập] Laravel 13 + PostgreSQL 17 + Docker + CI
+├── miniapp/                            # [Sub-repo Git độc lập] Zalo Mini App React/TS + Docker + CI
 ├── docs/
 │   ├── requirements.md                 # Đặc tả yêu cầu nghiệp vụ & kỹ thuật (P0 / P1 / P2)
 │   ├── requirements/
@@ -19,93 +24,66 @@
 │   ├── api-contract.md                 # Hợp đồng REST API (/api/v1)
 │   ├── database.md                     # Sơ đồ ERD, mô tả 7 bảng dữ liệu & Seeders
 │   ├── plans/
-│   │   └── roadmap-and-slices.md       # Lộ trình 7 ngày & các lát cắt dọc S1–S5
+│   │   └── roadmap-and-slices.md       # Lộ trình & các lát cắt dọc S1–S5
 │   ├── test-cases.md                   # Danh mục 21 kịch bản kiểm thử trọng yếu (TC-01 .. TC-21)
 │   ├── testing/
-│   │   └── test-report.md              # Báo cáo kết quả kiểm thử tự động (49 PHPUnit + 11 Vitest)
-│   ├── demo-script.md                  # Kịch bản trình diễn trực tiếp 8 bước cho Giám đốc
+│   │   └── test-report.md              # Báo cáo kết quả kiểm thử tự động
+│   ├── demo-script.md                  # Kịch bản trình diễn trực tiếp 8 bước
 │   ├── releases/
 │   │   ├── release-v0.1.0-mvp.md       # Ghi chú phát hành phiên bản v0.1.0-mvp
-│   │   └── s5-staging-zalo-deploy-runbook.md # Sổ tay triển khai HTTPS & Zalo Testing QR (S5)
-│   ├── PROJECT_STATE.md                # Trạng thái triển khai theo từng lát cắt (Vertical Slices)
-│   └── superpowers/                    # Đặc tả thiết kế & kế hoạch triển khai chi tiết S1–S4
+│   │   └── s5-staging-zalo-deploy-runbook.md # Sổ tay triển khai HTTPS & Zalo Testing QR
+│   ├── PROJECT_STATE.md                # Trạng thái triển khai theo từng lát cắt
+│   └── superpowers/                    # Đặc tả thiết kế & kế hoạch triển khai chi tiết
 ├── canteen_logo.jpg                    # Logo gốc thương hiệu Smart Canteen
 └── DESIGN.md                           # Hệ thống thiết kế giao diện & Design Tokens
 ```
 
-## Các tính năng đã hoàn thiện (S1 + S2 + S3 + S4)
+## Khởi chạy nhanh Toàn Hệ thống với Docker (Khuyến nghị)
 
-- **Nhận diện thương hiệu Smart Canteen:** Tích hợp logo chính thức và hệ màu xanh lá (`brand-500: #5DBE46` kết hợp `brand-700: #2E7D32` đạt độ tương phản chữ trắng `5.14:1` chuẩn WCAG 2.1 AA) đồng bộ trên cả Zalo Mini App và Cổng Quản trị Laravel Blade.
-- **Thực đơn & Tìm kiếm (S1):** Danh mục món ăn, tìm kiếm tiếng Việt debounce 300ms, lọc theo danh mục, hiển thị trạng thái còn món / hết món, chi tiết món ăn.
-- **Xác thực khách hàng (S2):**
-  - Xác minh `access_token` thật với Zalo Open API (`https://graph.zalo.me/v2.0/me` kèm `appsecret_proof` HMAC-SHA256) và cấp Laravel Sanctum Bearer token.
-  - Hỗ trợ `POST /api/v1/auth/demo` khi chạy ở môi trường `local`/`testing` (`DEMO_LOGIN_ENABLED=true`) và tự động khóa (`403 Forbidden`) trên `production`.
-- **Giỏ hàng & Đặt đơn an toàn (S2):**
-  - Quản lý giỏ hàng trong bộ nhớ bằng Jotai (`1..20` phần tử mỗi món).
-  - Tạo đơn hàng trong DB transaction (`DB::transaction` + `lockForUpdate`) kèm header `Idempotency-Key` chống tạo đơn trùng.
-  - Tính tiền hoàn toàn phía server từ bảng `products` (`unit_price`, `subtotal`, `total_amount` lưu cố định theo đơn vị nguyên `VND`), bỏ qua mọi giá do client gửi lên.
-- **Đơn của tôi & Chi tiết đơn (S2):**
-  - Khách hàng chỉ xem được đơn của chính mình (`OrderPolicy`, trả `404` nếu truy cập đơn người khác).
-  - Tự động làm mới (polling 7 giây) cho các đơn đang xử lý (`PENDING`, `PREPARING`, `READY`).
-- **Hệ thống Quản trị Admin/Staff & Phân quyền RBAC 3 cấp (S3 + S4):**
-  - Xác thực Session Auth (`/admin/login`) và phân quyền RBAC middleware (`role:staff,admin` cho điều phối đơn/thống kê/xem thực đơn; `role:admin` cho thêm/sửa/xóa Danh mục & Món ăn; chặn `customer` với `403 Forbidden`).
-  - Dashboard thống kê hôm nay (`/admin` và `GET /api/v1/admin/statistics`): tổng đơn hôm nay, đơn đang xử lý, doanh thu các đơn `COMPLETED` hôm nay, phân bổ theo trạng thái (tự động làm mới mỗi 10 giây).
-  - Bảng điều phối đơn hàng (`/admin/orders`, `/admin/orders/{order}` và `PATCH /api/v1/admin/orders/{id}/status`): kiểm tra chặt chẽ State Machine, kiểm soát đồng thời bằng Optimistic Locking (`version`, trả `409 Conflict` khi xung đột), và ghi lịch sử `order_status_logs`.
-  - Quản lý Thực đơn (`/admin/categories`, `/admin/products`): CRUD Danh mục & Món ăn, bảo toàn nguyên vẹn giá lịch sử của các đơn hàng cũ (**AC-11**) và chặn xóa danh mục/món ăn đã có ràng buộc dữ liệu.
-
-## Yêu cầu môi trường
-
-- **PHP:** `8.5.x` (Laravel Herd, bật `pdo_pgsql`, `mbstring`, `intl`, `bcmath`)
-- **Composer:** `2.x`
-- **PostgreSQL:** `17.x`
-- **Node.js:** `20+` / `24.x` & **npm** `10+`
-
-## Hướng dẫn khởi chạy Local
-
-### 1. Khởi chạy PostgreSQL
-
-Nếu máy bạn đã có PostgreSQL chạy ở cổng `5432`, tạo 2 database `titkul_canteen_demo` và `titkul_canteen_test` thuộc quyền `demo_user`.
-
-Nếu sử dụng cụm PostgreSQL cục bộ độc lập trong `.local/pgdata` (cổng `54329`):
-
-```powershell
-D:\DB_Design\PostgreSQL\pgsql\bin\postgres.exe -D .local\pgdata -p 54329 -c listen_addresses=127.0.0.1
-```
-
-### 2. Khởi chạy Backend & Cổng Quản trị (`api/`)
+### 1. Khởi chạy Backend API + PostgreSQL (`api/`)
 
 ```powershell
 cd api
-Copy-Item .env.example .env
-# Cập nhật DB_PORT / DB_USERNAME / DB_PASSWORD trong .env cho đúng PostgreSQL của bạn
-php artisan key:generate
-php artisan migrate --seed
-php artisan serve --host=127.0.0.1 --port=8000
+Copy-Item .env.docker.example .env
+docker compose up -d --build
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --seed
 ```
 
-- **REST API:** `http://127.0.0.1:8000/api/v1`
-- **Cổng Quản trị Admin/Staff (Blade):** `http://127.0.0.1:8000/admin/login`
-  - Tài khoản Admin mẫu: `admin@smartcanteen.local` / `Admin@123456`
-  - Tài khoản Staff mẫu: `staff@smartcanteen.local` / `Staff@123456`
+- **REST API:** `http://localhost:8000/api/v1` (Healthcheck: `http://localhost:8000/up`)
+- **Cổng Quản trị Admin/Staff:** `http://localhost:8000/admin/login`
+  - Admin mẫu: `admin@smartcanteen.local` / `Admin@123456`
+  - Staff mẫu: `staff@smartcanteen.local` / `Staff@123456`
 
-### 3. Khởi chạy Frontend Mini App (`miniapp/`)
+### 2. Khởi chạy Frontend Mini App (`miniapp/`)
 
 ```powershell
 cd miniapp
 Copy-Item .env.example .env
-npm install
-npm run dev
+docker compose up -d --build
 ```
 
-Mở trình duyệt tại `http://localhost:3000/` (ứng dụng tự động đăng nhập qua `/api/v1/auth/demo` khi chạy trên trình duyệt local ngoài Zalo).
+- **Mini App (Local):** `http://localhost:3000/`
+
+### 3. Chế độ Production-like (Local Staging Verification)
+
+```powershell
+# Backend (immutable non-root PHP-FPM + Nginx unprivileged)
+cd api
+docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+
+# Frontend (multi-stage build -> Nginx unprivileged + /healthz)
+cd ../miniapp
+docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+```
 
 ## Kiểm thử & Cổng chất lượng (Quality Gates)
 
 ```powershell
-# Backend (PHPUnit trên PostgreSQL + Laravel Pint)
+# Backend (trong Docker container hoặc host PHP 8.4+)
 cd api
-php artisan test
-vendor\bin\pint --test
+docker compose exec app vendor/bin/pint --test
+docker compose exec app php artisan test
 
 # Frontend (Vitest + TypeScript + Vite Production Build)
 cd ../miniapp
