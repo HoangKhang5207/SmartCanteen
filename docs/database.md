@@ -14,6 +14,14 @@
 erDiagram
     USERS ||--o{ ORDERS : "đặt đơn (user_id)"
     USERS ||--o{ ORDER_STATUS_LOGS : "thực hiện đổi trạng thái (changed_by)"
+    USERS ||--o{ STUDENTS : "phụ huynh quản lý (user_id)"
+    USERS ||--o{ SPENDING_LIMIT_LOGS : "điều chỉnh hạn mức (changed_by)"
+    STUDENTS ||--o{ STUDENT_CARDS : "sở hữu thẻ (student_id)"
+    STUDENT_CARDS ||--o{ BANK_LINKS : "liên kết ngân hàng (student_card_id)"
+    STUDENT_CARDS ||--o| SPENDING_LIMITS : "hạn mức ngày (student_card_id)"
+    STUDENT_CARDS ||--o{ SPENDING_LIMIT_LOGS : "lịch sử hạn mức (student_card_id)"
+    STUDENT_CARDS ||--o{ ORDERS : "thanh toán bằng thẻ (student_card_id)"
+    BANK_LINKS ||--o{ OTP_VERIFICATIONS : "xác thực OTP (bank_link_id)"
     CATEGORIES ||--o{ PRODUCTS : "chứa (category_id)"
     ORDERS ||--|{ ORDER_ITEMS : "bao gồm (order_id)"
     PRODUCTS ||--o{ ORDER_ITEMS : "được tham chiếu (product_id)"
@@ -90,6 +98,70 @@ erDiagram
         bigint changed_by FK "restrictOnDelete -> users.id"
         timestamp created_at
         timestamp updated_at
+    }
+
+    STUDENTS {
+        bigint id PK
+        bigint user_id FK "restrictOnDelete"
+        varchar student_code UK
+        varchar full_name
+        varchar class_name
+        varchar school_name
+        boolean is_active "default true"
+    }
+
+    STUDENT_CARDS {
+        bigint id PK
+        bigint student_id FK "restrictOnDelete"
+        varchar card_code UK
+        varchar status "ACTIVE | LOCKED | REVOKED"
+        timestamp issued_at
+    }
+
+    BANK_LINKS {
+        bigint id PK
+        bigint student_card_id FK "restrictOnDelete"
+        bigint user_id FK "restrictOnDelete"
+        varchar bank_code
+        varchar bank_name
+        text account_number_encrypted "AES-256"
+        varchar account_number_masked
+        text national_id_encrypted "AES-256"
+        varchar phone_masked
+        varchar status "PENDING_OTP | ACTIVE | UNLINKED | FAILED | EXPIRED"
+        timestamp linked_at "nullable"
+        timestamp unlinked_at "nullable"
+    }
+
+    OTP_VERIFICATIONS {
+        bigint id PK
+        bigint user_id FK "cascadeOnDelete"
+        bigint bank_link_id FK "cascadeOnDelete"
+        varchar purpose "BANK_LINK | BANK_UNLINK"
+        varchar code_hash "bcrypt"
+        smallint attempts
+        smallint resend_count
+        timestamp expires_at
+        timestamp verified_at "nullable"
+        timestamp invalidated_at "nullable"
+    }
+
+    SPENDING_LIMITS {
+        bigint id PK
+        bigint student_card_id FK "UNIQUE, restrictOnDelete"
+        integer daily_limit "0..5000000 VND"
+        integer spent_today "VND"
+        date spent_date "Asia/Ho_Chi_Minh"
+    }
+
+    SPENDING_LIMIT_LOGS {
+        bigint id PK
+        bigint student_card_id FK "restrictOnDelete"
+        bigint changed_by FK "restrictOnDelete -> users.id"
+        integer previous_limit
+        integer new_limit
+        varchar reason "nullable"
+        timestamp created_at
     }
 ```
 
