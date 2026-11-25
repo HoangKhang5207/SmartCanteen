@@ -129,7 +129,7 @@ erDiagram
 
 ## 3. Dữ liệu Khởi tạo Mẫu (Seeders)
 
-Chạy lệnh `php artisan migrate --seed` sẽ thực thi 2 Seeder idempotent (có thể chạy lặp lại nhiều lần không gây trùng dữ liệu):
+Chạy lệnh `php artisan migrate --seed` sẽ thực thi 3 Seeder idempotent (có thể chạy lặp lại nhiều lần không gây trùng dữ liệu):
 
 1. **`MenuSeeder` (`api/database/seeders/MenuSeeder.php`):**
    - Khởi tạo **6 danh mục** (`Cơm`, `Bún & Phở`, `Mì & Món Á`, `Bánh mì & Ăn nhẹ`, `Đồ uống`, `Tráng miệng`).
@@ -150,3 +150,6 @@ Chạy lệnh `php artisan migrate --seed` sẽ thực thi 2 Seeder idempotent (
 | **`student_cards`** | `2026_11_25_100002_create_student_cards_table.php` | Thẻ học sinh thông minh (`card_code` UNIQUE, `status`: `ACTIVE`/`LOCKED`/`REVOKED`). |
 | **`bank_links`** | `2026_11_25_100003_create_bank_links_table.php` | Liên kết ngân hàng & trích nợ tự động. Mã hóa AES-256 (`account_number_encrypted`, `national_id_encrypted`), lưu bản che (`account_number_masked`, `national_id_masked`, `phone_masked`). **Partial Unique Index PostgreSQL:** `bank_links_one_active_per_card_idx ON bank_links (student_card_id) WHERE status = 'ACTIVE'`. |
 | **`otp_verifications`** | `2026_11_25_100004_create_otp_verifications_table.php` | Xác thực OTP 6 chữ số cho `BANK_LINK` và `BANK_UNLINK`. Lưu `code_hash` (bcrypt, không lưu plaintext), theo dõi `attempts`/`max_attempts` (5), `resend_count`/`max_resends` (3), `last_sent_at`, `expires_at` (180s), `verified_at`, `invalidated_at`. |
+| **`spending_limits`** | `2026_11_25_200001_create_spending_limits_table.php` | Cấu hình hạn mức chi tiêu hằng ngày (1-1 với `student_cards`): `daily_limit`, `spent_today`, `spent_date` (tự động reset hằng ngày theo `Asia/Ho_Chi_Minh`). |
+| **`spending_limit_logs`** | `2026_11_25_200002_create_spending_limit_logs_table.php` | Nhật ký kiểm toán các lần thay đổi hạn mức (`previous_limit`, `new_limit`, `changed_by`, `reason`). |
+| **`orders` (mở rộng)** | `2026_11_25_200003_add_canteen_payment_fields_to_orders_table.php` | Thêm `student_card_id` (nullable FK `restrictOnDelete`), `payment_method`, `payment_status`, `store_name`, `discount_amount`, `remaining_limit_snapshot`, `payment_reference`. |
