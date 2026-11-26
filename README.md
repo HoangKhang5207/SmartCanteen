@@ -1,91 +1,139 @@
-# Smart Canteen — Workspace Hub (Zalo Mini App × React × Laravel 13)
+# Smart Canteen & Phân hệ Căn tin Số — Workspace Hub
 
-Workspace điều phối tài liệu kiến trúc, đặc tả và kiểm thử cho hệ thống **Smart Canteen** gồm **2 sub-repository Git độc lập**:
+Workspace điều phối tài liệu kiến trúc, đặc tả, kiểm thử và hướng dẫn vận hành cho hệ thống **Smart Canteen & Căn tin Số** (phủ đầy **10/10 Module** theo `FEATURES.md` §9), gồm **2 sub-repository Git độc lập**:
 
-- **`api/`** (Sub-repo độc lập): Laravel 13 REST API (`/api/v1`) + Cổng Quản trị Blade (`/admin`) + PostgreSQL 17 + Docker + GitHub Actions CI. Xem chi tiết tại `api/README.md`.
-- **`miniapp/`** (Sub-repo độc lập): Zalo Mini App (React 18 + TypeScript + ZaUI + Jotai + TanStack Query + Tailwind CSS) + Docker + GitHub Actions CI. Xem chi tiết tại `miniapp/README.md`.
+- **`api/`** *(Sub-repo Git độc lập)*: Laravel 13 REST API (`/api/v1`) + Admin Portal (`/admin`) + Quầy thu ngân POS (`/admin/pos`) + PostgreSQL 17 + Docker + GitHub Actions CI. Xem chi tiết: [api/README.md](api/README.md).
+- **`miniapp/`** *(Sub-repo Git độc lập)*: Zalo Mini App (React 18 + TypeScript + ZaUI + `zmp-sdk` + Jotai + TanStack Query + Tailwind CSS) + Docker + GitHub Actions CI. Xem chi tiết: [miniapp/README.md](miniapp/README.md).
 
-> **Lưu ý cấu trúc Git:** Từ phiên bản nâng cấp nền tảng (Trục 1), `api/` và `miniapp/` đã được tách thành 2 Git repository độc lập có bảo toàn trọn vẹn lịch sử commit S1–S5 của từng bên và được khai báo trong `.gitignore` của workspace cha. Workspace cha lưu giữ hồ sơ tài liệu dùng chung (`docs/`, `DESIGN.md`, `canteen_logo.jpg`).
+---
 
-## Cấu trúc Workspace & Hồ sơ Tài liệu Kỹ thuật
+## 1. Bảng So sánh 3 Chế độ Khởi chạy Dự án (`api/` + `miniapp/`)
 
-```text
-.
-├── api/                                # [Sub-repo Git độc lập] Laravel 13 + PostgreSQL 17 + Docker + CI
-├── miniapp/                            # [Sub-repo Git độc lập] Zalo Mini App React/TS + Docker + CI
-├── docs/
-│   ├── requirements.md                 # Đặc tả yêu cầu nghiệp vụ & kỹ thuật (P0 / P1 / P2)
-│   ├── requirements/
-│   │   └── acceptance-criteria-matrix.md # Ma trận truy vết tiêu chí nghiệm thu (AC-01 .. AC-16)
-│   ├── architecture/
-│   │   └── system-architecture.md      # Kiến trúc hệ thống, luồng Auth, Idempotency & State Machine
-│   ├── design/
-│   │   └── ui-ux-brand-guidelines.md   # Hệ màu thương hiệu chuẩn WCAG 2.1 AA & quy chuẩn UI/UX
-│   ├── api-contract.md                 # Hợp đồng REST API (/api/v1)
-│   ├── database.md                     # Sơ đồ ERD, mô tả 7 bảng dữ liệu & Seeders
-│   ├── plans/
-│   │   └── roadmap-and-slices.md       # Lộ trình & các lát cắt dọc S1–S5
-│   ├── test-cases.md                   # Danh mục 21 kịch bản kiểm thử trọng yếu (TC-01 .. TC-21)
-│   ├── testing/
-│   │   └── test-report.md              # Báo cáo kết quả kiểm thử tự động
-│   ├── demo-script.md                  # Kịch bản trình diễn trực tiếp 8 bước
-│   ├── releases/
-│   │   ├── release-v0.1.0-mvp.md       # Ghi chú phát hành phiên bản v0.1.0-mvp
-│   │   └── s5-staging-zalo-deploy-runbook.md # Sổ tay triển khai HTTPS & Zalo Testing QR
-│   ├── PROJECT_STATE.md                # Trạng thái triển khai theo từng lát cắt
-│   └── superpowers/                    # Đặc tả thiết kế & kế hoạch triển khai chi tiết
-├── canteen_logo.jpg                    # Logo gốc thương hiệu Smart Canteen
-└── DESIGN.md                           # Hệ thống thiết kế giao diện & Design Tokens
-```
+| Tiêu chí | **Chế độ 1: Thuần Local (Host)** | **Chế độ 2: Thuần Docker Compose** | **Chế độ 3: Zalo Mobile (Testing)** |
+|---|---|---|---|
+| **Mục đích** | Dev nhanh trên máy đã cài PHP 8.4, PostgreSQL 17 & Node 24 | Demo/Dev chuẩn nhất — **không cần cài PHP/PostgreSQL/Node** | Quét mã QR mở trực tiếp trên **App Zalo điện thoại** |
+| **Env `api/`** | `api/.env.example` → `api/.env` | `api/.env.docker.example` → `api/.env` | `api/.env.zalo.example` → `api/.env` |
+| **Env `miniapp/`** | `miniapp/.env.example` → `miniapp/.env` | `miniapp/.env.docker.example` → `miniapp/.env` | `miniapp/.env.zalo.example` → `miniapp/.env` |
+| **API / Admin / POS** | `http://localhost:8000` | `http://localhost:8000` | `https://<domain-https>` (Cloudflare Tunnel / VPS) |
+| **Mini App** | `http://localhost:3000` | `http://localhost:3000` | Zalo Mobile App (QR Testing từ `zmp deploy`) |
+| **Đăng nhập Mini App** | Demo Phone (`0901234567` / `0901234568`) | Demo Phone (`0901234567` / `0901234568`) | **SĐT Zalo thật** (`zmp-sdk getPhoneNumber()`) |
 
-## Khởi chạy nhanh Toàn Hệ thống với Docker (Khuyến nghị)
+---
 
-### 1. Khởi chạy Backend API + PostgreSQL (`api/`)
+## 2. Hướng dẫn Khởi chạy Từng Chế độ
 
+### Chế độ 1 — Chạy cả `api/` và `miniapp/` thuần Local trên Host
+
+**Terminal 1 (Backend `api/` — đảm bảo PostgreSQL 17 đang chạy ở cổng `54329` hoặc sửa `DB_PORT` trong `api/.env`):**
 ```powershell
 cd api
-Copy-Item .env.docker.example .env
-docker compose up -d --build
-docker compose exec app php artisan key:generate
-docker compose exec app php artisan migrate --seed
+Copy-Item .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate:fresh --seed
+php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-- **REST API:** `http://localhost:8000/api/v1` (Healthcheck: `http://localhost:8000/up`)
-- **Cổng Quản trị Admin/Staff:** `http://localhost:8000/admin/login`
-  - Admin mẫu: `admin@smartcanteen.local` / `Admin@123456`
-  - Staff mẫu: `staff@smartcanteen.local` / `Staff@123456`
-
-### 2. Khởi chạy Frontend Mini App (`miniapp/`)
-
+**Terminal 2 (Frontend `miniapp/`):**
 ```powershell
 cd miniapp
 Copy-Item .env.example .env
+npm ci
+npm run dev
+```
+
+- Mở Mini App: `http://localhost:3000` · Mở Admin/POS: `http://localhost:8000/admin/login` (`admin@smartcanteen.local` / `Admin@123456`).
+
+---
+
+### Chế độ 2 — Chạy cả `api/` và `miniapp/` bằng Docker / Docker Compose (Khuyến nghị)
+
+**Terminal 1 (Backend `api/` + PostgreSQL 17 + Nginx):**
+```powershell
+cd api
+Copy-Item .env.docker.example .env
+docker compose up -d --build --wait
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate:fresh --force --seed
+```
+
+**Terminal 2 (Frontend `miniapp/` — Vite Dev Server trong Docker):**
+```powershell
+cd miniapp
+Copy-Item .env.docker.example .env
 docker compose up -d --build
 ```
 
-- **Mini App (Local):** `http://localhost:3000/`
+- Mở Mini App: `http://localhost:3000` · Mở Admin/POS: `http://localhost:8000/admin/login`.
+- *(Tùy chọn Production-like stack: dùng `docker compose -f compose.yaml -f compose.prod.yaml up -d --build` trong từng thư mục).*
 
-### 3. Chế độ Production-like (Local Staging Verification)
+---
 
-```powershell
-# Backend (immutable non-root PHP-FPM + Nginx unprivileged)
-cd api
-docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+### Chế độ 3 — Chạy `api/` và `miniapp/` trên Zalo Mobile (Development / Testing)
 
-# Frontend (multi-stage build -> Nginx unprivileged + /healthz)
-cd ../miniapp
-docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+1. **Backend `api/` qua HTTPS công khai:**
+   ```powershell
+   cd api
+   Copy-Item .env.zalo.example .env
+   # Điền ZALO_APP_ID, ZALO_APP_SECRET, và domain HTTPS sau khi mở tunnel bên dưới
+   docker compose up -d --build --wait
+   docker compose exec app php artisan key:generate
+   docker compose exec app php artisan migrate --force --seed
+   ```
+   Mở cửa sổ PowerShell mới để cấp HTTPS công khai cho cổng `8000`:
+   ```powershell
+   cloudflared tunnel --url http://127.0.0.1:8000
+   ```
+   Cập nhật URL `https://...trycloudflare.com` vào `APP_URL` & `VNPAY_RETURN_URL` trong `api/.env`, sau đó chạy `docker compose exec app php artisan config:clear`.
+
+2. **Frontend `miniapp/` đẩy lên Zalo Mini App Testing:**
+   ```powershell
+   cd miniapp
+   Copy-Item .env.zalo.example .env
+   # Điền VITE_API_BASE_URL=https://...trycloudflare.com/api/v1 và APP_ID=<Zalo Mini App ID>
+   npm ci
+   npm run build
+   npm run login
+   npm run deploy
+   ```
+   Quét **Mã QR Testing** trên ứng dụng **Zalo điện thoại** (tài khoản phải nằm trong danh sách Testers trên Zalo Developer Center). Xem quy trình chi tiết tại [docs/releases/s5-staging-zalo-deploy-runbook.md](docs/releases/s5-staging-zalo-deploy-runbook.md).
+
+---
+
+## 3. Hồ sơ Tài liệu Kỹ thuật (`docs/`)
+
+```text
+docs/
+├── demo-script.md                                   # Kịch bản trình diễn trực tiếp 12 bước & bảng dữ liệu mẫu
+├── requirements.md                                  # Đặc tả yêu cầu 10/10 Module & RBAC 4 vai trò
+├── requirements/acceptance-criteria-matrix.md       # Ma trận truy vết tiêu chí nghiệm thu MVP -> Trục 3
+├── architecture/
+│   ├── system-architecture.md                       # Kiến trúc hệ thống, Lock Order, Auth & State Machines
+│   └── system-deep-dive-presentation-guide.md       # Cẩm nang Review Code, Review Test & Q&A cuộc họp
+├── design/ui-ux-brand-guidelines.md                 # Hệ màu WCAG 2.1 AA, 11 màn hình & A11y
+├── api-contract.md                                  # Hợp đồng REST API đầy đủ (§1–§11)
+├── database.md                                      # ERD 18 bảng, 27 migrations & 4 seeders
+├── plans/roadmap-and-slices.md                      # Lộ trình & lịch sử triển khai S1–S5, Trục 1–3
+├── test-cases.md                                    # Danh mục kịch bản kiểm thử (TC-01..TC-21)
+├── testing/
+│   ├── test-report.md                               # Báo cáo 126 PHPUnit + 44 Vitest tests
+│   └── truc3-security-e2e-audit.md                  # Báo cáo kiểm toán Bảo mật & 10/10 Module
+├── releases/
+│   ├── release-v1.0.0-digital-canteen.md            # Ghi chú phát hành bản hoàn thiện Căn tin Số
+│   ├── release-v0.1.0-mvp.md                        # Ghi chú phát hành mốc MVP lịch sử
+│   └── s5-staging-zalo-deploy-runbook.md            # Sổ tay triển khai Staging HTTPS & Zalo Mobile QR
+└── PROJECT_STATE.md                                 # Trạng thái toàn dự án
 ```
 
-## Kiểm thử & Cổng chất lượng (Quality Gates)
+## 4. Kiểm thử & Cổng chất lượng (Quality Gates)
 
 ```powershell
-# Backend (trong Docker container hoặc host PHP 8.4+)
+# Backend (chạy trên PostgreSQL 17 thật trong Docker)
 cd api
 docker compose exec app vendor/bin/pint --test
-docker compose exec app php artisan test
+docker compose exec app php artisan test --compact
 
-# Frontend (Vitest + TypeScript + Vite Production Build)
+# Frontend (Vitest + TypeScript + Vite Build)
 cd ../miniapp
 npm test
 npx tsc --noEmit
