@@ -13,15 +13,17 @@
 
 ---
 
-## 2. Danh mục Biến Môi trường Bắt buộc cho Staging / Production (`api/.env`)
+## 2. Danh mục Biến Môi trường Bắt buộc cho Mode 3 — Zalo Mobile (`api/.env.zalo.example` & `miniapp/.env.zalo.example`)
+
+> Đã có sẵn 2 file mẫu chuyên biệt cho Mode 3: `api/.env.zalo.example` và `miniapp/.env.zalo.example`. Chỉ cần copy sang `.env` và điền các giá trị `YOUR_*`.
 
 ```env
 APP_ENV=staging
 APP_DEBUG=false
 APP_URL=https://<ten-mien-https-cua-ban>
 
-# Bảo mật & CORS
-CORS_ALLOWED_ORIGINS=https://h5.zdn.vn
+# Bảo mật & CORS (bao gồm cả Zalo Android https://h5.zdn.vn và Zalo iOS zbrowser://h5.zdn.vn)
+CORS_ALLOWED_ORIGINS=https://h5.zdn.vn,zbrowser://h5.zdn.vn
 DEMO_LOGIN_ENABLED=false
 BANKING_EXPOSE_DEBUG_OTP=false
 
@@ -64,26 +66,38 @@ NOTIFICATION_PUSH_DRIVER=log
 ### Bước 2 — Khởi chạy Backend HTTPS (`api/`)
 ```powershell
 cd d:\Coding\TitKul_ProjectTest\TestPart2\api
-docker compose -f compose.prod.yaml up -d --wait
-docker compose -f compose.prod.yaml exec app php artisan migrate --force
+Copy-Item .env.zalo.example .env
+# Điền ZALO_APP_ID, ZALO_APP_SECRET, DB_PASSWORD và tạo APP_KEY (php artisan key:generate)
+
+docker compose -f compose.yaml -f compose.prod.yaml up -d --build --wait
+docker compose -f compose.yaml -f compose.prod.yaml exec app php artisan migrate --force
 # Nếu cần dữ liệu trình diễn:
-docker compose -f compose.prod.yaml exec app php artisan db:seed --force
+docker compose -f compose.yaml -f compose.prod.yaml exec app php artisan db:seed --force
 
 # Mở tunnel HTTPS (nếu chạy trên máy cá nhân):
 cloudflared tunnel --url http://127.0.0.1:8000
+# -> Điền domain https://...trycloudflare.com vào APP_URL & VNPAY_RETURN_URL trong api/.env rồi restart app
 ```
 
 ### Bước 3 — Cấu hình & Deploy Zalo Mini App (`miniapp/`)
-1. Cập nhật `miniapp/.env`:
+1. Tạo `miniapp/.env` từ mẫu Mode 3 và điền thông tin:
+   ```powershell
+   cd d:\Coding\TitKul_ProjectTest\TestPart2\miniapp
+   Copy-Item .env.zalo.example .env
+   ```
+   Cập nhật trong `miniapp/.env`:
    ```env
    VITE_API_BASE_URL=https://<ten-mien-https-cua-ban>/api/v1
    VITE_DEMO_PHONE_LOGIN=false
+   APP_ID=<ZALO_MINI_APP_ID>
    ```
 2. Build & deploy Testing:
    ```powershell
-   cd d:\Coding\TitKul_ProjectTest\TestPart2\miniapp
+   npm ci
    npm run build
-   # Dùng Zalo Mini App VS Code Extension hoặc zmp-cli để Deploy Testing lấy mã QR
+   npm run login
+   npm run deploy
+   # (Hoặc dùng Zalo Mini App VS Code Extension -> Deploy Testing để lấy mã QR)
    ```
 
 ### Bước 4 — Checklist Nghiệm thu Trước khi Gửi Giám đốc (Pre-Flight)

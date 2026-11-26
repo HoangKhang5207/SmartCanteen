@@ -4,26 +4,86 @@ Tài liệu này hướng dẫn chi tiết cách khởi chạy và trình diễn
 
 ---
 
-## 1. Chuẩn bị Môi trường & Bộ Dữ liệu Mẫu (Pre-Demo Setup — 2 phút)
+## 1. Chuẩn bị Môi trường Theo 3 Chế độ Khởi chạy (Chọn 1 trong 3)
 
-### 1.1. Khởi chạy Backend (`api/`) bằng Docker (Khuyến nghị — 1 lệnh duy nhất)
-```powershell
-cd d:\Coding\TitKul_ProjectTest\TestPart2\api
-docker compose up -d --wait
-docker compose exec app php artisan migrate:fresh --force --seed
-```
-- **API Base URL:** `http://127.0.0.1:8000/api/v1`
-- **Admin & POS Portal:** `http://127.0.0.1:8000/admin/login`
-- *(Hoặc chạy local PHP + PostgreSQL nếu máy cài sẵn PHP 8.4+: `php artisan migrate:fresh --seed && php artisan serve --host=127.0.0.1 --port=8000`)*
+### 1.1. Chế độ 1 — Chạy cả `api/` và `miniapp/` thuần Local trên Host
+> Dành cho máy đã cài sẵn PHP `8.4+`, PostgreSQL `17` (chạy trên `127.0.0.1:54329`) và Node.js `20+/24`.
 
-### 1.2. Khởi chạy Zalo Mini App (`miniapp/`)
-```powershell
-cd d:\Coding\TitKul_ProjectTest\TestPart2\miniapp
-npm run dev
-```
-- **Mini App URL:** `http://localhost:3000/` (khuyến nghị mở DevTools ở khung di động `390×844` bên trái màn hình; mở Admin Portal bên phải màn hình).
+1. **Khởi động Backend (`api/`):**
+   ```powershell
+   cd d:\Coding\TitKul_ProjectTest\TestPart2\api
+   Copy-Item .env.example .env
+   # Kiểm tra DB_PORT / DB_PASSWORD trong api/.env khớp với PostgreSQL trên máy
+   composer install
+   php artisan key:generate
+   php artisan migrate:fresh --seed
+   php artisan serve --host=127.0.0.1 --port=8000
+   ```
+2. **Khởi động Mini App (`miniapp/`):**
+   ```powershell
+   cd d:\Coding\TitKul_ProjectTest\TestPart2\miniapp
+   Copy-Item .env.example .env
+   npm ci
+   npm run dev
+   ```
+- **Mini App (nửa màn hình trái, khung di động `390×844`):** `http://localhost:3000/`
+- **Admin & POS Portal (nửa màn hình phải):** `http://localhost:8000/admin/login`
 
-### 1.3. Bảng Tài khoản & Dữ liệu Demo có sẵn sau `migrate:fresh --seed`
+---
+
+### 1.2. Chế độ 2 — Chạy cả `api/` và `miniapp/` bằng Docker / Docker Compose (Khuyến nghị)
+> Không cần cài PHP, PostgreSQL hay Node trên máy host — chỉ cần Docker Desktop.
+
+1. **Khởi động Backend (`api/` + PostgreSQL 17 + Nginx):**
+   ```powershell
+   cd d:\Coding\TitKul_ProjectTest\TestPart2\api
+   Copy-Item .env.docker.example .env
+   docker compose up -d --build --wait
+   docker compose exec app php artisan key:generate
+   docker compose exec app php artisan migrate:fresh --force --seed
+   ```
+2. **Khởi động Mini App (`miniapp/`):**
+   ```powershell
+   cd d:\Coding\TitKul_ProjectTest\TestPart2\miniapp
+   Copy-Item .env.docker.example .env
+   docker compose up -d --build
+   ```
+- **Mini App:** `http://localhost:3000/` (trình duyệt trên host gọi `http://localhost:8000/api/v1`)
+- **Admin & POS Portal:** `http://localhost:8000/admin/login`
+
+---
+
+### 1.3. Chế độ 3 — Chạy trên Zalo Mobile (Zalo Mini App Development / Testing)
+> Dành cho trình diễn bằng điện thoại thật quét mã QR trên ứng dụng Zalo (chi tiết đầy đủ xem tại `docs/releases/s5-staging-zalo-deploy-runbook.md`).
+
+1. **Cấu hình & chạy Backend qua HTTPS công khai (`api/`):**
+   ```powershell
+   cd d:\Coding\TitKul_ProjectTest\TestPart2\api
+   Copy-Item .env.zalo.example .env
+   # Điền ZALO_APP_ID, ZALO_APP_SECRET từ Zalo Developer Center
+   docker compose up -d --build --wait
+   docker compose exec app php artisan key:generate
+   docker compose exec app php artisan migrate:fresh --force --seed
+   # Mở tunnel HTTPS ở một cửa sổ PowerShell riêng:
+   cloudflared tunnel --url http://127.0.0.1:8000
+   # Điền URL https://...trycloudflare.com vào APP_URL & VNPAY_RETURN_URL trong api/.env, rồi chạy:
+   docker compose exec app php artisan config:clear
+   ```
+2. **Build & đẩy bản Testing lên Zalo Mini App (`miniapp/`):**
+   ```powershell
+   cd d:\Coding\TitKul_ProjectTest\TestPart2\miniapp
+   Copy-Item .env.zalo.example .env
+   # Điền VITE_API_BASE_URL=https://...trycloudflare.com/api/v1 và APP_ID=<Zalo Mini App ID>
+   npm ci
+   npm run build
+   npm run login
+   npm run deploy
+   ```
+- Mở **Zalo trên điện thoại** quét mã QR Testing để chạy luồng xác thực **SĐT Zalo thật (`zmp-sdk getPhoneNumber()`)**; Admin & POS vẫn mở tại `http://localhost:8000/admin/login` (hoặc `https://...trycloudflare.com/admin/login`).
+
+---
+
+### 1.4. Bảng Tài khoản & Dữ liệu Demo có sẵn sau `migrate:fresh --seed`
 
 > Toàn bộ 4 Seeder (`MenuSeeder`, `StaffSeeder`, `StudentCardSeeder`, `DemoShowcaseSeeder`) đều **idempotent** (chạy lại nhiều lần không trùng dữ liệu). Các đơn hàng lịch sử mẫu được đánh dấu **ngày hôm qua** để thống kê **Hôm nay** trên Dashboard bắt đầu sạch tại `0 ₫` trước khi thao tác trực tiếp.
 
@@ -90,7 +150,7 @@ npm run dev
    - Trừ đồng thời: `stock_quantity` của 2 món (`30 → 29`), `spent_today` (`0 → 70.000 ₫`), và số dư Vietcombank Sandbox (`500.000 → 430.000 ₫`), ghi sổ cái `payment_transactions` (`SUCCEEDED`) và phát thông báo sau `DB::afterCommit()`.
 
 #### Bước 6 — Điều phối Đơn trên Admin Portal & Polling Thời gian thực
-1. Cửa sổ phải: đăng nhập `http://127.0.0.1:8000/admin/login` bằng **`admin@smartcanteen.local` / `Admin@123456`**.
+1. Cửa sổ phải: đăng nhập `http://localhost:8000/admin/login` bằng **`admin@smartcanteen.local` / `Admin@123456`**.
 2. Tại **Dashboard (`/admin`)**: thấy **Tổng đơn hôm nay = 1**, đơn mới `SC-...` (`v1`, `PAID`, `STUDENT_CARD`).
 3. Bấm chuyển **`PENDING (v1) → PREPARING (v2) → READY (v3)`**:
    - Quan sát cửa sổ trái (**Mini App** — không reload): sau `<= 7s`, trạng thái tự đổi sang **"Sẵn sàng nhận món" (`READY`)**, đồng thời tab **Thông báo** tăng badge chưa đọc.
