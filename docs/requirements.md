@@ -1,62 +1,64 @@
-# Đặc tả Yêu cầu Nghiệp vụ & Kỹ thuật — Smart Canteen (`docs/requirements.md`)
+# Đặc tả Yêu cầu Nghiệp vụ & Kỹ thuật — Smart Canteen & Phân hệ Căn tin Số (`docs/requirements.md`)
 
-- **Dự án:** Smart Canteen (Zalo Mini App × React 18 × Laravel 13 × PostgreSQL 17.5)
-- **Loại dự án:** Greenfield (Độc lập 100%, không kết nối cơ sở dữ liệu hay dịch vụ của hệ thống Căn Tin Số production)
-- **Trạng thái:** Đã phê duyệt & hiện thực hóa hoàn chỉnh (P0 + P1)
+- **Dự án:** Smart Canteen & Phân hệ Căn tin Số (Zalo Mini App × React 18 × Laravel 13 × PostgreSQL 17)
+- **Kiến trúc Repository:** Workspace điều phối (`TestPart2/`) + 2 Git sub-repository độc lập (`api/`, `miniapp/`), Dockerized & GitHub Actions CI.
+- **Loại dự án:** Greenfield (Độc lập 100%, không kết nối cơ sở dữ liệu hay dịch vụ của hệ thống production).
+- **Trạng thái:** Hoàn tất 100% MVP (`S1–S4`) + Hạ tầng (`Trục 1`) + Căn tin Số (`Trục 2 · D1–D3`) + Production-Readiness (`Trục 3 · P1–P4`) — phủ đầy **10/10 Module Căn tin Số** theo `FEATURES.md` §9.
 
 ---
 
 ## 1. Mục tiêu Nghiệp vụ (Business Objective)
 
-Xây dựng một hệ thống đặt món và điều phối đơn hàng căn tin thông minh hoạt động đầu-cuối (end-to-end):
-1. **Khách hàng (Customer):** Mở ứng dụng Smart Canteen trên Zalo Mini App, xem thực đơn, lọc theo danh mục, tìm kiếm món ăn, thêm món vào giỏ hàng, đặt đơn hàng và theo dõi trạng thái chế biến theo thời gian thực.
-2. **Nhân viên Bếp (Staff):** Đăng nhập vào Cổng Quản trị Laravel Blade (hoặc sử dụng Admin API), tiếp nhận đơn hàng mới, chuyển trạng thái đơn theo quy trình chuẩn (`PENDING → PREPARING → READY → COMPLETED` hoặc `CANCELLED`).
-3. **Quản trị viên (Admin):** Bao gồm toàn bộ quyền của Staff, đồng thời theo dõi thống kê doanh thu trong ngày và quản lý thực đơn (thêm/sửa/ẩn Danh mục & Món ăn).
+Xây dựng trọn vẹn hệ sinh thái **Căn tin Số thông minh trong trường học** kết hợp đặt món trực tuyến trên Zalo Mini App, quẹt thẻ học sinh thông minh tại quầy POS, liên kết tài khoản ngân hàng trích nợ tự động, kiểm soát hạn mức chi tiêu hằng ngày, đối soát kế toán và thông báo giao dịch tức thời:
+
+1. **Phụ huynh (`parent` / alias `customer`):** Đăng nhập qua Số điện thoại Zalo (Lazy Auth — xem thực đơn tự do trước khi đăng nhập), quản lý một hoặc nhiều thẻ học sinh của con em, liên kết/hủy liên kết tài khoản ngân hàng qua OTP SMS 6 chữ số, thiết lập/theo dõi hạn mức chi tiêu hằng ngày, đặt món trước hoặc theo dõi toàn bộ giao dịch POS/Online và nhận thông báo tức thời.
+2. **Học sinh (`student`):** Đăng nhập xem thẻ của chính mình, theo dõi hạn mức còn lại trong ngày, tự đặt món trong phạm vi hạn mức phụ huynh cấp; tuyệt đối không được phép thay đổi hạn mức hay liên kết/hủy ngân hàng.
+3. **Nhân viên Bếp / Thu ngân POS (`staff`):** Sử dụng Cổng Quản trị (`/admin`) và màn hình **Quầy POS (`/admin/pos`)** để tra cứu thẻ học sinh, quẹt thẻ/thu tiền mặt, in biên lai, điều phối đơn đặt trước (`PENDING → PREPARING → READY → COMPLETED / CANCELLED`) và xem danh sách thẻ/đối soát/nhật ký thông báo.
+4. **Quản trị viên (`admin`):** Toàn quyền của `staff`, cộng thêm quản trị thực đơn & tồn kho (`stock_quantity`), quản lý hồ sơ học sinh & cấp phát/khóa/thu hồi thẻ, điều chỉnh hạn mức khẩn cấp, cấu hình tài khoản Sandbox ngân hàng và thực hiện đối soát/xử lý chênh lệch kế toán.
 
 ---
 
-## 2. Phân quyền Người dùng (RBAC Roles)
+## 2. Phân quyền Người dùng — RBAC 4 Vai trò
 
-| Vai trò (`UserRole`) | Định danh & Xác thực | Quyền hạn được phép | Giới hạn bảo mật |
+| Vai trò (`UserRole`) | Định danh & Xác thực | Quyền hạn được phép | Rào chắn bảo mật |
 |---|---|---|---|
-| **`customer`** | Xác thực qua Zalo Open API (`POST /api/v1/auth/zalo` kèm `appsecret_proof` HMAC-SHA256) hoặc Demo Login local (`POST /api/v1/auth/demo`), nhận Sanctum Bearer Token | Xem thực đơn công khai; tạo đơn hàng mới; xem danh sách và chi tiết đơn hàng của chính mình | Không truy cập được `/admin/*` hoặc `/api/v1/admin/*` (`403 Forbidden`); không xem được đơn của khách khác (`404 Not Found`); không tự hủy đơn sau khi đặt |
-| **`staff`** | Xác thực Session trên Web (`/admin/login`) hoặc Sanctum Token trên API | Xem Dashboard thống kê hôm nay; xem danh sách/chi tiết toàn bộ đơn hàng; chuyển trạng thái đơn hàng theo State Machine; tra cứu danh sách Món ăn & Danh mục | Không được thêm/sửa/xóa Danh mục hoặc Món ăn (`403 Forbidden` bởi middleware `role:admin`) |
-| **`admin`** | Xác thực Session trên Web (`/admin/login`) hoặc Sanctum Token trên API | Toàn quyền của `staff` + Thêm/sửa/xóa Danh mục (`/admin/categories`) và Món ăn (`/admin/products`) | Không được xóa danh mục đang chứa món ăn hoặc xóa món ăn đã phát sinh trong lịch sử đơn hàng (`restrictOnDelete`) |
+| **`parent`** *(alias tương thích ngược: `customer`)* | Xác thực SĐT Zalo server-side (`POST /api/v1/auth/zalo-phone`), Zalo OAuth (`POST /api/v1/auth/zalo`), hoặc Demo Phone/Key cục bộ; nhận Sanctum Bearer Token | Xem thực đơn công khai; quản lý nhiều thẻ con em; liên kết & hủy liên kết ngân hàng qua OTP; đặt/sửa hạn mức hằng ngày; đặt đơn (`STUDENT_CARD`, `VNPAY`, `COUNTER_CASH`); theo dõi lịch sử & thông báo | Chặn `403` mọi tuyến `/admin/*` & `/api/v1/admin/*`; IDOR trả `404 Not Found` khi truy cập thẻ/đơn/thông báo của phụ huynh khác |
+| **`student`** | Xác thực SĐT Zalo (`students.student_user_id = users.id`); nhận Sanctum Bearer Token | Xem thẻ học sinh gắn với mình, hạn mức còn lại, lịch sử hạn mức & đơn hàng; tự đặt đơn bằng thẻ trong hạn mức cho phép; xem thông báo của mình | Chặn `403 PARENT_ROLE_REQUIRED` ở mọi API tài chính phụ huynh (`bank-links`, `verify-otp`, `unlink`, `spending-limit`); chặn `403` trên `/admin/*` |
+| **`staff`** | Xác thực Session Web (`/admin/login`) + CSRF hoặc Sanctum API | Xem Dashboard hôm nay; vận hành **POS Quầy Căn tin (`/admin/pos`)** & in biên lai; điều phối trạng thái đơn hàng; xem (read-only) Danh mục, Món ăn, Học sinh, Thẻ, Đối soát, Nhật ký Thông báo | Chặn `403` (`role:admin`) khi thêm/sửa/xóa Danh mục, Món ăn, Tồn kho, Học sinh, Trạng thái thẻ, Hạn mức Admin, Đối soát |
+| **`admin`** | Xác thực Session Web (`/admin/login`) + CSRF hoặc Sanctum API | Toàn quyền của `staff` + CRUD Danh mục/Món ăn/Tồn kho, CRUD Học sinh & cấp phát/khóa/thu hồi thẻ, Admin Override hạn mức, Chạy đối soát & xác nhận xử lý chênh lệch, Cấu hình tài khoản Sandbox | Ràng buộc toàn vẹn DB (`restrictOnDelete`), không xóa danh mục có món, không xóa món/học sinh có lịch sử giao dịch, không chuyển phụ huynh khi còn liên kết ngân hàng đang mở |
 
 ---
 
-## 3. Phân nhóm Yêu cầu Chức năng (MoSCoW / P0–P2)
+## 3. Phủ Đầy 10/10 Module Căn tin Số (`FEATURES.md` §9)
 
-### 3.1. Nhóm P0 — Cốt lõi (Bắt buộc hoàn thiện & Đã nghiệm thu)
-- **Thực đơn công khai:** Xem danh sách danh mục đang hoạt động (`is_active = true`), danh sách món ăn theo danh mục, tìm kiếm tiếng Việt không phân biệt hoa thường, xem chi tiết từng món ăn và trạng thái còn món / hết món (`is_available`).
-- **Giỏ hàng trong bộ nhớ (In-Memory Cart):** Thêm món, tăng/giảm số lượng (`1..20` phần tử mỗi món), tự động xóa khi giảm về `0`, xóa toàn bộ giỏ, tính tổng số lượng và tổng tiền tạm tính.
-- **Đặt đơn hàng (Transactional Checkout):** Tạo `orders` và `order_items` trong một `DB::transaction` kèm khóa dòng `lockForUpdate()` trên bảng `products`.
-- **Theo dõi đơn hàng & Lịch sử đơn:** Khách hàng xem danh sách đơn của mình và màn hình chi tiết đơn tự động cập nhật trạng thái (polling mỗi 7 giây cho đơn chưa kết thúc).
-- **Điều phối đơn hàng trên Admin:** Nhân viên xem đơn mới, lọc theo trạng thái / mã đơn, chuyển trạng thái đơn hợp lệ và đồng bộ về Mini App.
-
-### 3.2. Nhóm P1 — Bảo mật, Toàn vẹn dữ liệu & Vận hành (Bắt buộc & Đã nghiệm thu)
-- **Định danh Zalo thật & Demo Login an toàn:** Xác minh `access_token` với `https://graph.zalo.me/v2.0/me` kèm `appsecret_proof`; chế độ Demo Login tự động khóa (`403`) khi `APP_ENV=production` hoặc `DEMO_LOGIN_ENABLED=false`.
-- **Tính tiền phía Server (Server-Side Pricing):** Lưu tiền tệ bằng số nguyên `VND` (`unsignedInteger`). Server tự tính `unit_price`, `subtotal`, `total_amount` từ bảng `products` và bỏ qua mọi giá/tổng tiền do client gửi lên.
-- **Bảo toàn giá lịch sử (Historical Price Immutability):** Khi Admin thay đổi giá bán của món ăn, các đơn hàng đã tạo trước đó vẫn giữ nguyên `unit_price`, `subtotal` và `total_amount`.
-- **Chống tạo đơn trùng (Idempotency):** Bắt buộc header `Idempotency-Key` (`1..100` ký tự) khi tạo đơn. Cùng `(user_id, idempotency_key)` + cùng `payload_hash` trả về đơn cũ (`200 OK`); cùng key nhưng khác payload trả `409 Conflict`.
-- **Kiểm soát đồng thời (Optimistic Locking):** Bảng `orders` có cột `version`. Mọi yêu cầu chuyển trạng thái phải gửi kèm `version` hiện tại; nếu lệch trả `409 Conflict`.
-- **Nhật ký kiểm toán (Audit Log):** Mỗi lần chuyển trạng thái đơn thành công đều ghi vào bảng `order_status_logs` (`from_status`, `to_status`, `changed_by`, `created_at`).
-- **Thống kê vận hành hôm nay:** Tổng số đơn hôm nay, số đơn đang xử lý, doanh thu các đơn `COMPLETED` hôm nay, phân bổ số lượng theo từng trạng thái.
-- **Quản lý Thực đơn (CRUD):** Admin thêm/sửa/xóa Danh mục và Món ăn ngay trên giao diện Blade.
-
-### 3.3. Nhóm P2 — Mở rộng tương lai (Ngoài phạm vi MVP hiện tại)
-- Quét QR chọn bàn tại căn tin, thông báo đẩy Zalo ZNS, mã giảm giá / khuyến mãi, cổng thanh toán trực tuyến (ZaloPay/VietQR), báo cáo kế toán nâng cao theo tháng/quý.
+| # | Module Nghiệp vụ | Phạm vi Yêu cầu Đã Hoàn thiện |
+|---|---|---|
+| 1 | **Authentication Module** | Lazy Auth trên Mini App; Zalo Phone Auth (`getPhoneNumber` → server gọi `graph.zalo.me/v2.0/me/info` bằng `ZALO_APP_SECRET`); Demo Phone local (`APP_ENV in [local, testing]`); Logout thu hồi Sanctum token. |
+| 2 | **Student Management** | CRUD Học sinh trên Admin (`/admin/canteen/students`); 1 phụ huynh quản lý N học sinh; liên kết 1-1 tài khoản `student_user_id`; khóa chuyển phụ huynh khi còn `bank_links` mở. |
+| 3 | **Student Card Module** | `CARD-01..07`: cấp thẻ mới/thay thế (tự thu hồi thẻ cũ), đổi trạng thái `ACTIVE ↔ LOCKED → REVOKED`, tự động ngắt `UNLINKED` ngân hàng & vô hiệu hóa OTP khi thu hồi. |
+| 4 | **Banking Integration** | Strategy `BankingGatewayInterface`; `SandboxBankingGateway` mô phỏng số dư thực, chế độ lỗi (`INSUFFICIENT_FUNDS`, `BANK_DECLINED`, `GATEWAY_TIMEOUT`) & hoàn tiền; Webhook `HMAC-SHA256` chống replay; `VNPay Sandbox` chuẩn v2.1.0 `HMAC-SHA512`. |
+| 5 | **OTP Verification** | `OTP-01..08`: mã 6 chữ số băm `bcrypt`, TTL `180s`, cooldown gửi lại `30s`, tối đa `5` lần sai (`429`), tối đa `3` lần gửi lại; `SmsGatewayInterface` (`log`, `esms`, `twilio`) rollback sạch khi gửi SMS thất bại (`503`). |
+| 6 | **Spending Limit** | `LIMIT-01..13`: hạn mức `0..5.000.000 ₫` (bội số `1.000 ₫`), reset hằng ngày tự động theo `Asia/Ho_Chi_Minh`, kiểm tra & hoàn hạn mức nguyên tử, nhật ký `spending_limit_logs`, cảnh báo chạm ngưỡng thấp (`<= 20%`). |
+| 7 | **Order Management** | Server-side pricing (VND nguyên dương), bảo toàn giá lịch sử, `Idempotency-Key` (`201/200/409`), State Machine + Optimistic Locking (`version`), trừ/hoàn tồn kho nguyên tử `stock_quantity`, **POS Quầy Căn tin (`/admin/pos`)** + biên lai in. |
+| 8 | **Payment Processing** | Sổ cái bất biến `payment_transactions` ghi nhận cả `SUCCEEDED`, `FAILED`, `TIMEOUT`, `REFUND` (ghi bền vững ngoài transaction rollback khi lỗi ngân hàng); chống double-charge & VNPay IPN idempotent. |
+| 9 | **Transaction History & Reconciliation** | `ORDER-01..07`, `DETAIL-01..14`; `ReconciliationService` idempotent theo `(reconciliation_date, provider)` phát hiện 5 trạng thái (`MATCHED`, `AMOUNT_MISMATCH`, `MISSING_LOCAL`, `MISSING_IN_BANK`, `STATUS_MISMATCH`), lệnh `canteen:reconcile`, giao diện Admin `/admin/canteen/reconciliation`. |
+| 10 | **Notification Module** | Bảng `canteen_notifications`, 7 sự kiện tự động sau `DB::afterCommit()` / post-catch, `PushNotificationChannelInterface` (`log`, `zalo_oa`, `zalo_zns`) lỗi push không ảnh hưởng thanh toán, Mini App `/notifications` + badge `BottomNav`, Admin log `/admin/canteen/notifications`. |
 
 ---
 
 ## 4. Yêu cầu Phi chức năng (Non-Functional Requirements)
 
-1. **Bảo mật & Tách biệt môi trường:**
-   - Không lưu `ZALO_APP_SECRET` hay bất kỳ khóa bí mật nào trong mã nguồn Frontend (`miniapp/`).
-   - Không phụ thuộc vào `localStorage`, `sessionStorage` hoặc `cookie` trên Zalo Mini App.
-   - Cấu hình CORS chặt chẽ qua biến môi trường `CORS_ALLOWED_ORIGINS` (hỗ trợ `https://h5.zdn.vn` và preflight `OPTIONS`).
-2. **Khả năng truy cập & Giao diện (UI/UX & WCAG 2.1 AA):**
-   - Áp dụng nhận diện thương hiệu Smart Canteen (`canteen_logo.jpg`) với màu chủ đạo tương tác `#2E7D32` (`brand-700`, độ tương phản `5.14:1` trên nền trắng) kết hợp màu xanh lá logo `#5DBE46` (`brand-500`).
-   - Đầy đủ 4 trạng thái giao diện (`Loading`, `Error` kèm nút thử lại, `Empty`, `Success`) trên mọi màn hình.
-3. **Kiểm thử tự động:**
-   - 100% quy tắc nghiệp vụ cốt lõi được bảo vệ bởi bộ kiểm thử tự động PHPUnit chạy trực tiếp trên PostgreSQL 17.5 và Vitest trên Frontend.
+1. **Bảo mật & Quyền riêng tư (Security & PII Protection):**
+   - Mã hóa AES-256 (`encrypted` cast) cho `account_number_encrypted` và `national_id_encrypted`; OTP băm `bcrypt`.
+   - `DataMaskingService` che mờ toàn bộ STK/CCCD/SĐT trước khi trả API, hiển thị Blade/POS, lưu `meta` thông báo hoặc ghi log.
+   - Chữ ký số nghiêm ngặt: `appsecret_proof` (`HMAC-SHA256` Zalo), Webhook (`HMAC-SHA256` + cửa sổ `±300s` + anti-replay `UNIQUE (provider, event_id)`), VNPay (`HMAC-SHA512` + `vnp_TmnCode` + `vnp_Amount` + fail-closed trên production).
+   - `SecurityHeadersMiddleware` gắn `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`; chặn open redirect qua `isSafeInternalRoute()` và `isSafeHttpUrl()`.
+   - Không lưu `ZALO_APP_SECRET` hay token vào `localStorage`/`cookie` trên Mini App (in-memory only).
+2. **Toàn vẹn Đồng thời & Chống Deadlock:**
+   - Thứ tự khóa dòng PostgreSQL (`SELECT ... FOR UPDATE`) thống nhất toàn hệ thống: `student_cards → spending_limits → sandbox_bank_accounts → products (id ASC) → orders → payment_transactions`.
+   - Partial Unique Index PostgreSQL đảm bảo tối đa 1 liên kết ngân hàng `ACTIVE` trên mỗi thẻ.
+3. **Khả năng Tiếp cận & UI/UX (WCAG 2.1 AA):**
+   - Bảng màu thương hiệu Smart Canteen (`#2E7D32` `brand-700` tỷ lệ tương phản `5.14:1` trên trắng), 4 trạng thái chuẩn (`Loading`, `Error`, `Empty`, `Success`), focus trap modal, roving `tabIndex` cho `radiogroup`, và `aria-live="polite"` cho badge thông báo chưa đọc.
+4. **Hạ tầng & Kiểm thử Tự động:**
+   - Docker multi-stage non-root (`api/` PHP 8.4 FPM + Nginx + PostgreSQL 17; `miniapp/` Nginx unprivileged) kèm GitHub Actions CI độc lập cho cả 2 repo.
+   - Toàn bộ quy tắc nghiệp vụ cốt lõi được bảo vệ bằng bộ kiểm thử tự động PHPUnit trên PostgreSQL 17 và Vitest + TypeScript trên Frontend.

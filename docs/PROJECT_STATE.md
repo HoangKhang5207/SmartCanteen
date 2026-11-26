@@ -2,9 +2,10 @@
 
 ## Tóm tắt chung
 
-- **Dự án:** Smart Canteen (Zalo Mini App × React × Laravel 13 × PostgreSQL)
-- **Nhánh hiện tại:** `feature/s4-docs-polish` (tách từ `main` commit `51601fc` sau khi đã merge S1, S2 và S3 vào `main`)
-- **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-14-smart-canteen-design.md` (APPROVED 2026-11-14)
+- **Dự án:** Smart Canteen & Phân hệ Căn tin Số (Zalo Mini App × React 18 × Laravel 13 × PostgreSQL 17)
+- **Kiến trúc Repo:** Workspace cha (`TestPart2/`) + 2 sub-repo độc lập (`api/`, `miniapp/`)
+- **Trạng thái tổng thể:** **100% HOÀN TẤT** MVP (`S1–S4`) + Hạ tầng (`Trục 1`) + Căn tin Số (`Trục 2 · D1–D3`) + Production-Readiness (`Trục 3 · P1–P4`, đã merge `main`: `root @ 8418b46`, `api @ de322f3`, `miniapp @ dd6cac2`) + Final Demo Polish (`chore/p4-polish-demo-docs`)
+- **Độ phủ nghiệp vụ:** **10/10 Module Căn tin Số (`FEATURES.md` §9)** — `126` PHPUnit tests (`1,387` assertions trên PostgreSQL 17) + `44` Vitest tests (`100% PASS`)
 
 ---
 
@@ -163,11 +164,25 @@
 ## Trục 3 · Slice P4 — Notification Module (In-App + Push Zalo OA/ZNS) & Security/E2E Audit Toàn Hệ thống
 
 - **Mã tác vụ:** `CANTEEN-P4-NOTIFICATIONS-SECURITY-E2E`
-- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge cục bộ vào `main` trên cả 3 repo)
+- **Trạng thái:** `MERGED_TO_MAIN` (`root @ 8418b46`, `api @ de322f3`, `miniapp @ dd6cac2`)
 - **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-26-p4-notifications-security-e2e-design.md` (`APPROVED 2026-11-26`)
 - **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-26-p4-notifications-security-e2e.md`
-- **Nhánh hiện tại:** `feat/p4-notifications-security-e2e` trên cả 3 repository (`root`, `api/`, `miniapp/`)
 - **Phạm vi đã hiện thực hóa:**
   - [x] Backend `api/`: Migration `canteen_notifications`, `PushNotificationChannelInterface` (`log`/`zalo_oa`/`zalo_zns`), `NotificationService` gắn 7 sự kiện tự động (fail-safe sau commit), REST API `/api/v1/notifications/*`, Admin Blade `/admin/canteen/notifications`, `SecurityHeadersMiddleware`, + P3 Minors (khóa metadata/tồn kho & prepend đơn POS mới), + 2 bộ test mới (`NotificationModuleTest`, `ProductionReadinessEndToEndTest`).
   - [x] Frontend `miniapp/`: Trung tâm Thông báo `/notifications` (Lazy Auth, lọc chưa đọc, đọc tất cả, `isSafeInternalRoute`), `BottomNav` 5 tab kèm badge chưa đọc, + P3 Minors (roving `tabIndex`, câu chữ chuẩn vai trò học sinh, snackbar chạm trần tồn kho).
   - [x] Tài liệu `docs/`: báo cáo kiểm toán `docs/testing/truc3-security-e2e-audit.md`, `api-contract.md` (§11), `database.md` (§7), `PROJECT_STATE.md`.
+
+---
+
+## Hoàn thiện Cuối (Final Demo Polish, Seed Data & Bộ Hồ sơ Review Kỹ thuật)
+
+- **Mã tác vụ:** `CANTEEN-FINAL-POLISH-DEMO-DOCS`
+- **Trạng thái:** `COMPLETED_VERIFIED` (nhánh `chore/p4-polish-demo-docs` trên cả 3 repo, chờ duyệt merge cục bộ vào `main`)
+- **Phạm vi đã hoàn thành:**
+  - [x] Xử lý triệt để 2 điểm Minor cuối của Slice P4: bổ sung 3 chỉ mục lọc Admin cho `canteen_notifications` (`2026_11_26_600002_add_admin_filter_indexes_to_canteen_notifications_table.php` — `M-4`) và chuẩn hóa vùng thông báo `aria-live="polite" aria-atomic="true"` cho badge chưa đọc trên `BottomNav` (`M-5`).
+  - [x] Bổ sung `DemoShowcaseSeeder` idempotent (4 học sinh, 4 thẻ đủ trạng thái `ACTIVE` đã liên kết / `ACTIVE` chưa liên kết / `BIDV` thiếu tiền `15.000 ₫` / `LOCKED`, 2 đơn lịch sử hôm qua, sổ cái `payment_transactions` kèm dòng `TIMEOUT`, 1 đợt đối soát có dòng lệch chờ Admin xử lý, 4 thông báo In-App; bảo toàn thống kê hôm nay = `0`) + `DemoShowcaseSeederTest`.
+  - [x] Cập nhật đồng bộ toàn bộ bộ tài liệu `docs/` (`demo-script.md` 12 bước, `requirements.md`, `acceptance-criteria-matrix.md`, `system-architecture.md`, `ui-ux-brand-guidelines.md`, `roadmap-and-slices.md`, `database.md`, `api-contract.md`, `test-cases.md`, `test-report.md`, `release-v1.0.0-digital-canteen.md`, `s5-staging-zalo-deploy-runbook.md`).
+  - [x] Bổ sung Cẩm nang Review Code & Bài Test cho buổi họp Giám đốc + Developer: `docs/architecture/system-deep-dive-presentation-guide.md`.
+- **Kết quả kiểm chứng tươi:**
+  - Backend: `vendor/bin/pint --test` **PASS (`200 files`)** · `php artisan test --compact` **PASS (`126 passed`, `1,387 assertions`)** · `migrate:fresh --seed` + `db:seed` lần 2 **PASS (`27 migrations`, `4 seeders`)**.
+  - Frontend: `npm test` **PASS (`11 files`, `44 tests`)** · `npx tsc --noEmit` **PASS (`0 errors`)** · `npm run build` **PASS (`608 modules`)**.

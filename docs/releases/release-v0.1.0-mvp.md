@@ -1,5 +1,7 @@
 # Ghi chú Phát hành — Smart Canteen `v0.1.0-mvp` (`docs/releases/release-v0.1.0-mvp.md`)
 
+> **Lưu ý lịch sử:** Đây là ghi chú phát hành của mốc **MVP (`S1–S4`)**. Để xem phiên bản đầy đủ mới nhất sau khi hoàn thiện Trục 1 + Trục 2 (`D1–D3`) + Trục 3 (`P1–P4`) với **10/10 Module Căn tin Số**, xem [release-v1.0.0-digital-canteen.md](./release-v1.0.0-digital-canteen.md).
+
 - **Phiên bản:** `v0.1.0-mvp`
 - **Ngày phát hành nội bộ:** `2026-11-14`
 - **Phạm vi hoàn thành:** Lát cắt S1, S2, S3 và S4 (100% tính năng P0 và P1 trên môi trường Local/Development).
