@@ -447,3 +447,21 @@
 - **Học sinh & Cấp phát Thẻ:**
   - `GET /admin/canteen/students` (`role:staff,admin`).
   - `GET/POST /admin/canteen/students/create`, `GET/PUT/DELETE /admin/canteen/students/{student}`, `POST /admin/canteen/students/{student}/cards` (`role:admin` only).
+
+---
+
+## 11. Trục 3 · Slice P4 — Notification Module (In-App + Push Zalo OA/ZNS) & Security Headers
+
+### 11.1. Customer / Parent / Student Notification API (`auth:sanctum`, IDOR-protected)
+- `GET /api/v1/notifications?page=1&per_page=15&unread_only=0&type=...`: Danh sách thông báo phân trang của người dùng hiện tại kèm `meta.unread_count`.
+- `GET /api/v1/notifications/unread-count`: Trả `{ data: { unread_count: int } }`.
+- `PATCH /api/v1/notifications/{id}/read`: Đánh dấu đã đọc 1 thông báo (`404` nếu không thuộc tài khoản hiện tại).
+- `POST /api/v1/notifications/read-all`: Đánh dấu toàn bộ thông báo chưa đọc thành đã đọc (`{ data: { marked_count, unread_count: 0 } }`).
+
+### 11.2. Sự kiện tự động & Push Drivers
+- 7 loại sự kiện: `PURCHASE_SUCCESS`, `LOW_SPENDING_LIMIT` (`<= 20%`), `PAYMENT_FAILED`, `ORDER_REFUNDED`, `ORDER_STATUS_UPDATED`, `BANK_LINK_CHANGED`, `SPENDING_LIMIT_UPDATED`.
+- `NOTIFICATION_PUSH_DRIVER`: `log` (mặc định), `zalo_oa`, `zalo_zns`. Lỗi push được ghi nhận `push_status = FAILED` và không ảnh hưởng giao dịch thanh toán.
+
+### 11.3. Admin Blade & Security Headers
+- `GET /admin/canteen/notifications` (`role:staff,admin`): Nhật ký thông báo & trạng thái push.
+- Global HTTP Security Headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`.

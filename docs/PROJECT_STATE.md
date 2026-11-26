@@ -150,10 +150,24 @@
 ## Trục 3 · Slice P3 — POS Quầy Căn tin (Staff), Quản lý Tồn kho (`stock_quantity`), CRUD Học sinh & RBAC 4 Vai trò
 
 - **Mã tác vụ:** `CANTEEN-P3-POS-INVENTORY-STUDENTS-RBAC`
-- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge cục bộ vào `main` trên cả 3 repo)
+- **Trạng thái:** `MERGED_TO_MAIN` (`root @ 42e1146`, `api @ f2a5625`, `miniapp @ 3044130`)
 - **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-25-p3-pos-inventory-students-rbac-design.md` (`APPROVED 2026-11-25`)
 - **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-25-p3-pos-inventory-students-rbac.md`
 - **Nhánh hiện tại:** `feat/p3-pos-inventory-students-rbac` trên cả 3 repository (`root`, `api/`, `miniapp/`)
 - **Phạm vi đã hiện thực hóa:**
   - [x] Backend `api/`: 2 migrations additive (`products.stock_quantity`/`low_stock_threshold`, `students.student_user_id`), `InsufficientStockException` & trừ/hoàn kho nguyên tử trong `OrderService` theo đúng thứ tự khóa chuẩn, `PosTerminalController` + Blade `/admin/pos` & biên lai in, `StudentManagementController` + Blade `/admin/canteen/students` & cấp phát thẻ, nhập kho nhanh `/admin/products/{product}/stock`, RBAC 4 vai trò (`admin`/`staff`/`parent`/`student`, tương thích ngược `customer`), `StudentCardSeeder` có sẵn tài khoản Học sinh demo `0901234568`, + P2 Minor `gateway_txn_ref` cho `TIMEOUT`, + 4 bộ test mới (`ProductInventoryTest`, `StaffPosTerminalTest`, `AdminStudentCrudTest`, `FourRoleRbacTest`).
   - [x] Frontend `miniapp/`: hiển thị & giới hạn số lượng theo tồn kho ở `MenuPage`/`ProductDetailPage`/`CartPage`, chế độ Học sinh chỉ-xem trên `CanteenHubPage` + nút SĐT demo học sinh `0901234568`, + 2 P2 Minors (badge trạng thái thanh toán trên `OrdersPage` & điều hướng phím mũi tên WAI-ARIA cho `role="radiogroup"` trên `CartPage`).
+
+---
+
+## Trục 3 · Slice P4 — Notification Module (In-App + Push Zalo OA/ZNS) & Security/E2E Audit Toàn Hệ thống
+
+- **Mã tác vụ:** `CANTEEN-P4-NOTIFICATIONS-SECURITY-E2E`
+- **Trạng thái:** `COMPLETED_VERIFIED` (chờ người dùng duyệt merge cục bộ vào `main` trên cả 3 repo)
+- **Đặc tả thiết kế:** `docs/superpowers/specs/2026-11-26-p4-notifications-security-e2e-design.md` (`APPROVED 2026-11-26`)
+- **Kế hoạch triển khai:** `docs/superpowers/plans/2026-11-26-p4-notifications-security-e2e.md`
+- **Nhánh hiện tại:** `feat/p4-notifications-security-e2e` trên cả 3 repository (`root`, `api/`, `miniapp/`)
+- **Phạm vi đã hiện thực hóa:**
+  - [x] Backend `api/`: Migration `canteen_notifications`, `PushNotificationChannelInterface` (`log`/`zalo_oa`/`zalo_zns`), `NotificationService` gắn 7 sự kiện tự động (fail-safe sau commit), REST API `/api/v1/notifications/*`, Admin Blade `/admin/canteen/notifications`, `SecurityHeadersMiddleware`, + P3 Minors (khóa metadata/tồn kho & prepend đơn POS mới), + 2 bộ test mới (`NotificationModuleTest`, `ProductionReadinessEndToEndTest`).
+  - [x] Frontend `miniapp/`: Trung tâm Thông báo `/notifications` (Lazy Auth, lọc chưa đọc, đọc tất cả, `isSafeInternalRoute`), `BottomNav` 5 tab kèm badge chưa đọc, + P3 Minors (roving `tabIndex`, câu chữ chuẩn vai trò học sinh, snackbar chạm trần tồn kho).
+  - [x] Tài liệu `docs/`: báo cáo kiểm toán `docs/testing/truc3-security-e2e-audit.md`, `api-contract.md` (§11), `database.md` (§7), `PROJECT_STATE.md`.
