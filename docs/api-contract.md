@@ -238,7 +238,7 @@
 
 ## 4. Quản trị & Điều phối đơn hàng (S3 — Staff/Admin Endpoints)
 
-> **Phân quyền (RBAC):** Toàn bộ nhóm `/api/v1/admin/*` yêu cầu xác thực `auth:sanctum` **và** middleware `role:staff,admin`. Tài khoản có `role = customer` gọi vào sẽ nhận `403 Forbidden`.
+> **Phân quyền (RBAC 4 vai trò):** Toàn bộ nhóm `/api/v1/admin/*` yêu cầu xác thực `auth:sanctum` **và** middleware `role:staff,admin`. Tài khoản có `role = parent`, `customer` hoặc `student` gọi vào sẽ nhận `403 Forbidden`.
 
 ### 4.1. Danh sách đơn hàng cho Nhân viên / Quản trị viên
 

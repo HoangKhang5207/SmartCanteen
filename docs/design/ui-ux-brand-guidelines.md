@@ -1,65 +1,65 @@
 # Hướng dẫn Thiết kế Giao diện & Trải nghiệm Người dùng (`docs/design/ui-ux-brand-guidelines.md`)
 
-## 1. Nguồn cảm hứng & Nhận diện Thương hiệu (Brand Identity)
+## 1. Nhận diện Thương hiệu & Bảng màu Chuẩn WCAG 2.1 AA
 
-Hệ thống giao diện của **Smart Canteen** (trên cả Zalo Mini App `miniapp/` và Cổng Quản trị `api/resources/views/admin/`) được xây dựng đồng nhất từ tài sản thương hiệu gốc `canteen_logo.jpg`:
-- **Biểu tượng:** Bộ muỗng, nĩa và dao màu xanh lá tươi (`#5DBE46`) đặt trên nền trắng tinh khiết (`#FFFFFF`).
-- **Chữ thương hiệu:** Dòng chữ `"Canteen"` màu đen than đậm (`#111827`).
-
----
-
-## 2. Hệ thống Màu sắc Chuẩn Tiếp cận WCAG 2.1 AA (Color Palette)
-
-Vì màu xanh lá tươi nguyên bản trên logo (`#5DBE46`) có độ tương phản `2.32:1` khi đi với chữ trắng (chưa đạt ngưỡng `4.5:1` của chuẩn WCAG 2.1 AA cho văn bản nhỏ), hệ thống thiết kế phân tách rõ **màu nhấn thương hiệu (Accent)** và **màu hành động chính (Primary Interactive)**:
+Hệ thống giao diện đồng nhất trên cả **Zalo Mini App (`miniapp/`)**, **Admin Portal (`/admin`)** và **Quầy POS (`/admin/pos`)** xuất phát từ logo `canteen_logo.jpg` (`#5DBE46` xanh lá tươi + `#111827` đen than):
 
 | Token Tailwind / CSS | Mã Hex | Vai trò sử dụng | Độ tương phản (Contrast Ratio) |
 |---|---|---|---|
-| `brand-50` | `#EEF8EB` | Nền banner chào mừng, nền tab đang chọn, nền thông báo thành công | `18.1:1` với chữ `#111827` |
-| `brand-100` | `#D8F0D2` | Viền thẻ thương hiệu, nền huy hiệu trạng thái `READY` | `8.40:1` với chữ `brand-900` (`#14532D`) |
-| `brand-500` | `#5DBE46` | **Màu Lá Cây Gốc của Logo** — dùng cho điểm nhấn trang trí, viền nổi bật, và nút hành động trên thanh nổi nền tối (`#0F172A`) | `8.25:1` với chữ tối `#0F172A` |
-| `brand-600` | `#3FA32B` | Màu chuyển tiếp trung gian cho biểu tượng và viền phụ | — |
-| `brand-700` (`--zmp-primary-color`) | `#2E7D32` | **Màu Tương Tác Chính (Primary CTA)** — dùng cho nút bấm chính, chip danh mục đang chọn, giá tiền món ăn, đường viền focus bàn phím | **`5.14:1`** với chữ trắng `#FFFFFF` (**Đạt chuẩn WCAG 2.1 AA**) |
-| `brand-800` | `#236B27` | Trạng thái hover / active khi nhấn nút chính | `6.72:1` với chữ trắng `#FFFFFF` |
-| `brand-900` | `#14532D` | Chữ tiêu đề nhấn mạnh và chữ trên huy hiệu xanh lá | `9.65:1` với nền trắng |
-| `surface-muted` | `#F6F8F5` | Màu nền tổng thể của trang (ấm, dịu mắt, làm nổi bật thẻ món ăn trắng `#FFFFFF`) | — |
+| `brand-50` | `#EEF8EB` | Nền banner chào mừng, thẻ trạng thái đang chọn, nền thông báo thành công | `18.1:1` với `#111827` |
+| `brand-100` | `#D8F0D2` | Viền thẻ thương hiệu, nền huy hiệu `READY` / `PAID` | `8.40:1` với `brand-900` (`#14532D`) |
+| `brand-500` | `#5DBE46` | Màu nhấn logo, viền thẻ học sinh, nút nổi trên thanh tối `#0F172A` | `8.25:1` với `#0F172A` |
+| `brand-700` (`--zmp-primary-color`) | `#2E7D32` | **Màu Tương Tác Chính (Primary CTA)** — nút bấm, giá tiền, viền focus bàn phím | **`5.14:1`** với `#FFFFFF` (**Đạt WCAG 2.1 AA**) |
+| `brand-800` | `#236B27` | Hover / Active nút chính | `6.72:1` với `#FFFFFF` |
+| `surface-muted` | `#F6F8F5` | Nền trang tổng thể làm nổi bật các thẻ nội dung trắng `#FFFFFF` | — |
 
 ---
 
-## 3. Màu sắc Ngữ nghĩa cho Trạng thái Đơn hàng (Semantic Status Badges)
+## 2. Kiến trúc Điều hướng & 11 Màn hình Zalo Mini App (`miniapp/`)
 
-Mọi trạng thái đơn hàng luôn đi kèm **nhãn văn bản tiếng Việt rõ ràng** (không bao giờ chỉ dùng màu sắc đơn thuần):
+### 2.1. Thanh Điều hướng Đáy 5 Tab (`BottomNav`)
+1. **Thực đơn (`/`)** — Public (Lazy Auth).
+2. **Căn tin (`/canteen`)** — Yêu cầu đăng nhập SĐT Zalo.
+3. **Giỏ (`/cart`)** — Public xem/chỉnh giỏ; yêu cầu đăng nhập khi bấm đặt đơn; hiện badge tổng số phần ăn.
+4. **Đơn hàng (`/orders`)** — Lịch sử đơn hàng (Online + POS), polling 10s.
+5. **Thông báo (`/notifications`)** — Badge pill đỏ (`1..99`, `99+`) cập nhật mỗi 20s kèm vùng live region `aria-live="polite" aria-atomic="true"` cho trình đọc màn hình (không đọc trùng với pill visual `aria-hidden="true"`).
 
-| Mã trạng thái | Nhãn hiển thị (Mini App & Admin) | Nền (Background) | Chữ (Text) | Ý nghĩa nghiệp vụ |
-|---|---|---|---|---|
-| `PENDING` | **Chờ xác nhận** | `#FEF3C7` (`amber-100`) | `#92400E` (`amber-800`) | Đơn mới đặt, đang chờ bếp tiếp nhận |
-| `PREPARING` | **Đang chế biến** | `#DBEAFE` (`blue-100`) | `#1E40AF` (`blue-800`) | Nhân viên bếp đang chuẩn bị suất ăn |
-| `READY` | **Sẵn sàng nhận món** | `#D8F0D2` (`brand-100`) | `#14532D` (`brand-900`) | Món đã xong, mời khách tới quầy nhận |
-| `COMPLETED` | **Đã hoàn thành** | `#F3F4F6` (`gray-100`) | `#374151` (`gray-700`) | Khách đã nhận món hoàn tất |
-| `CANCELLED` | **Đã hủy** | `#FEE2E2` (`red-100`) | `#991B1B` (`red-800`) | Đơn bị hủy bởi nhân viên/quản trị |
+### 2.2. Danh sách 11 Trang & Component Chuyên biệt
+| Tuyến đường | Màn hình | Thành phần UI nổi bật |
+|---|---|---|
+| `/` | `MenuPage` | Chip danh mục, tìm kiếm debounce tiếng Việt, badge tồn kho (`Còn X phần` / `Hết món`), snackbar chạm trần tồn kho, phân trang |
+| `/products/:id` | `ProductDetailPage` | `<ProductImage variant="detail" />`, giới hạn số lượng theo `stock_quantity` |
+| `/cart` | `CartPage` | Chọn phương thức thanh toán `role="radiogroup"` hỗ trợ **roving `tabIndex` + phím mũi tên**, chọn thẻ học sinh, ẩn nút `"Đổi hạn mức"` với vai trò `student` |
+| `/orders` | `OrdersPage` | Danh sách đơn có phân trang kèm cả badge trạng thái đơn & badge trạng thái thanh toán (`UNPAID`/`PAID`/`REFUNDED`/`FAILED`/`PENDING_RECONCILE`) |
+| `/orders/:id` | `OrderDetailPage` | Đủ 14 trường `DETAIL-01..14`, nút mở cổng **VNPay Sandbox** an toàn (`isSafeHttpUrl`), tự động polling 7s |
+| `/canteen` | `CanteenHubPage` | Bộ chuyển đổi đa thẻ học sinh, `<StudentCardView />`, thanh tiến độ hạn mức ngày, chế độ chỉ-xem cho `student`, nút mô phỏng POS & nút Đăng xuất |
+| `/canteen/link-bank` | `BankLinkFormPage` | Chọn ngân hàng hỗ trợ, kiểm tra độ dài STK theo từng ngân hàng, tự động điền SĐT phụ huynh, checkbox điều khoản trích nợ tự động |
+| `/canteen/verify-otp` | `BankLinkOtpPage` | `<OtpCodeInput />` 6 ô hỗ trợ dán/sửa chữ số giữa/backspace, đồng hồ đếm ngược wall-clock `180s`, cooldown gửi lại `30s`, chặn double-submit |
+| `/canteen/unlink-otp` | `BankUnlinkOtpPage` | Xác thực OTP hủy liên kết + màn hình hoàn tất hủy liên kết (Screen #15) |
+| `/canteen/limit-history` | `LimitHistoryPage` | Lịch sử kiểm toán thay đổi hạn mức ngày (`SpendingLimitLog`) phân trang |
+| `/notifications` | `NotificationsPage` | Lọc *Tất cả / Chưa đọc*, nút *Đọc tất cả*, biểu tượng ngữ nghĩa theo `severity`, điều hướng an toàn `isSafeInternalRoute()` |
 
 ---
 
-## 4. Quy chuẩn 4 Trạng thái Màn hình & Tương tác (Screen States & Ergonomics)
+## 3. Hệ thống Huy hiệu Ngữ nghĩa (Semantic Badges)
 
-Mỗi màn hình trên Zalo Mini App (`MenuPage`, `ProductDetailPage`, `CartPage`, `OrdersPage`, `OrderDetailPage`) đều tuân thủ:
-1. **Loading State (`LoadingState`):** Hiển thị `Spinner` kèm thông báo ngữ cảnh (`role="status"`, `aria-live="polite"`).
-2. **Error State (`ErrorState`):** Hiển thị thông báo lỗi rõ ràng (`role="alert"`) và nút **"Thử lại"** có trạng thái loading khi đang tải lại (`isRetrying`).
-3. **Empty State (`EmptyState`):** Hướng dẫn thân thiện khi tìm kiếm không có món ăn, giỏ hàng trống hoặc chưa có đơn hàng nào, kèm nút điều hướng về Thực đơn.
-4. **Success State:** Bố cục thẻ một cột ưu tiên thiết bị di động (`320px–480px`), kích thước nút bấm cảm ứng tối thiểu `36px–44px`, thanh điều hướng đáy cố định (`BottomNav`) hiển thị badge tổng số lượng món trong giỏ theo thời gian thực.
+### 3.1. Trạng thái Đơn hàng (`OrderStatus`)
+| Mã | Nhãn | Nền / Chữ |
+|---|---|---|
+| `PENDING` | **Chờ xác nhận** | `amber-100` / `amber-800` |
+| `PREPARING` | **Đang chế biến** | `blue-100` / `blue-800` |
+| `READY` | **Sẵn sàng nhận món** | `brand-100` / `brand-900` |
+| `COMPLETED` | **Đã hoàn thành** | `gray-100` / `gray-700` |
+| `CANCELLED` | **Đã hủy** | `red-100` / `red-800` |
+
+### 3.2. Trạng thái Thanh toán (`PaymentStatus`) & Tồn kho
+- `PAID` (**Đã thanh toán** — xanh lá), `UNPAID` (**Chưa thanh toán** — hổ phách), `REFUNDED` (**Đã hoàn tiền** — xanh dương), `FAILED` (**Thanh toán lỗi** — đỏ), `PENDING_RECONCILE` (**Chờ đối soát** — tím).
+- Tồn kho: `stock_quantity === 0` (**Hết hàng** — đỏ, khóa nút mua); `<= low_stock_threshold` (**Sắp hết: còn X** — hổ phách); `null` (**Không giới hạn**).
 
 ---
 
-## 5. Quy chuẩn Hiển thị Hình ảnh Món ăn Đồng nhất & Sắc nét (`<ProductImage />`)
-
-Component [product-image.tsx](file:///d:/Coding/TitKul_ProjectTest/TestPart2/miniapp/src/components/product-image.tsx) chuẩn hóa việc hiển thị hình ảnh sản phẩm trên toàn bộ Mini App:
-
-1. **Thư mục đặt ảnh tải về:**
-   - Đặt file ảnh tải từ Internet vào thư mục [miniapp/public/images/products/](file:///d:/Coding/TitKul_ProjectTest/TestPart2/miniapp/public/images/products/README.md) (và bản sao tại [api/public/images/products/](file:///d:/Coding/TitKul_ProjectTest/TestPart2/api/public/images/products/README.md) nếu muốn hiển thị trên bảng Admin `/admin/products`) theo đúng tên `<slug>.jpg` của từng món ăn.
-   - Hoặc dán trực tiếp URL ảnh (`https://...`) vào ô **Đường dẫn hoặc URL hình ảnh** trong trang Quản trị (`/admin/products/{id}/edit`).
-2. **Kích thước khung cố định & tự động cắt khung sắc nét (`object-cover object-center`):**
-   - **Danh sách Thực đơn (`variant="card"`):** Khung vuông cố định `80×80 px` (`w-20 h-20 aspect-square rounded-lg`), tự động `object-cover object-center` giúp mọi bức ảnh (dù tỷ lệ gốc là `1:1`, `4:3` hay `16:9`) đều hiển thị đồng đều 100% kích thước mà không bị méo hình.
-   - **Giỏ hàng (`variant="cart"`):** Khung vuông cố định `56×56 px` (`w-14 h-14 aspect-square rounded-lg`) với `object-cover object-center`.
-   - **Chi tiết món ăn (`variant="detail"`):** Khung ngang chuẩn `aspect-[4/3] max-h-64` (`w-full object-cover object-center`).
-3. **Độ phân giải khuyến nghị & Cơ chế Fallback an toàn:**
-   - Khuyến nghị tải ảnh có kích thước từ **`800×800 px` (tỷ lệ `1:1`)** hoặc **`800×600 px` (tỷ lệ `4:3`)**, định dạng `.jpg` hoặc `.webp` để đạt độ nét cao trên màn hình Retina/High-DPI của điện thoại.
-   - Khi một món ăn chưa có file ảnh trong thư mục `miniapp/public/images/products/` (hoặc URL ảnh bị lỗi mạng), sự kiện `onError` trên `<ProductImage />` tự động chuyển về hiển thị logo thương hiệu `canteen-logo.jpg` (`object-contain`), đảm bảo giao diện không bao giờ xuất hiện biểu tượng ảnh vỡ (broken image icon).
+## 4. Quy chuẩn Tiếp cận (A11y), Hình ảnh & Biên lai POS
+1. **4 Trạng thái Màn hình:** Mọi trang đều triển khai `LoadingState` (`role="status"`), `ErrorState` (`role="alert"` + nút Thử lại), `EmptyState`, và `Success`.
+2. **Focus & Keyboard:** `useFocusTrap` cho tất cả Modal/Dialog (`ZaloPhoneLoginModal`, `SpendingLimitSheet`, `UnlinkConfirmDialog`), khôi phục focus khi đóng, và roving `tabIndex` trên `radiogroup`.
+3. **Hình ảnh Món ăn (`<ProductImage />`):** Khung vuông cố định `80×80 px` (`card`), `56×56 px` (`cart`), `aspect-[4/3]` (`detail`) với `object-cover object-center` và fallback tự động về `canteen-logo.jpg` khi lỗi mạng.
+4. **Biên lai Quầy POS (`/admin/pos/receipt/{order}`):** Bố cục khổ giấy in nhiệt gọn nhẹ, `@media print` tự động ẩn thanh điều hướng và nút thao tác.
